@@ -8,6 +8,7 @@
     "columns": {
       "name": "Namn",
       "responsiblePerson": "Ansvarig",
+      "createdAt": "Skapad",
       "updatedAt": "Uppdaterad",
       "total": "Totalt",
       "items": "Rader"

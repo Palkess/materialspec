@@ -8,10 +8,14 @@ interface Spec {
   id: string;
   name: string;
   responsiblePerson: string;
+  createdAt: Date | string;
   updatedAt: Date | string;
   itemCount: number;
   grandTotal: string;
 }
+
+type SortColumn = "name" | "responsiblePerson" | "createdAt" | "updatedAt" | "grandTotal";
+type SortDir = "asc" | "desc";
 
 interface Props {
   lang: "sv" | "en";
@@ -51,6 +55,8 @@ function SpecListInner({ lang }: Props) {
   const [specs, setSpecs] = useState<Spec[]>([]);
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
+  const [sortCol, setSortCol] = useState<SortColumn>("createdAt");
+  const [sortDir, setSortDir] = useState<SortDir>("desc");
   const apiUrl = getApiUrl();
 
   const loadSpecs = async () => {
@@ -68,11 +74,35 @@ function SpecListInner({ lang }: Props) {
     }
   }, [user]);
 
+  const handleSort = (col: SortColumn) => {
+    if (col === sortCol) {
+      setSortDir((d) => (d === "asc" ? "desc" : "asc"));
+    } else {
+      setSortCol(col);
+      setSortDir("asc");
+    }
+  };
+
   const filtered = useMemo(() => {
-    if (!search.trim()) return specs;
-    const q = search.toLowerCase();
-    return specs.filter((s) => s.name.toLowerCase().includes(q));
-  }, [specs, search]);
+    const q = search.trim().toLowerCase();
+    const base = q ? specs.filter((s) => s.name.toLowerCase().includes(q)) : specs;
+
+    return [...base].sort((a, b) => {
+      let cmp = 0;
+      if (sortCol === "name") {
+        cmp = a.name.localeCompare(b.name);
+      } else if (sortCol === "responsiblePerson") {
+        cmp = (a.responsiblePerson || "").localeCompare(b.responsiblePerson || "");
+      } else if (sortCol === "createdAt") {
+        cmp = new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+      } else if (sortCol === "updatedAt") {
+        cmp = new Date(a.updatedAt).getTime() - new Date(b.updatedAt).getTime();
+      } else if (sortCol === "grandTotal") {
+        cmp = parseFloat(a.grandTotal) - parseFloat(b.grandTotal);
+      }
+      return sortDir === "asc" ? cmp : -cmp;
+    });
+  }, [specs, search, sortCol, sortDir]);
 
   const handleDuplicate = async (id: string) => {
     await trpc.specs.duplicate.mutate({ id, locale: lang });
@@ -140,18 +170,34 @@ function SpecListInner({ lang }: Props) {
           <table className="w-full">
             <thead>
               <tr className="border-b border-concrete-700">
-                <th className="text-left px-4 py-3 text-xs font-bold text-neutral-400 uppercase tracking-wider">
-                  {t("list.columns.name")}
-                </th>
-                <th className="text-left px-4 py-3 text-xs font-bold text-neutral-400 uppercase tracking-wider hidden md:table-cell">
-                  {t("list.columns.responsiblePerson")}
-                </th>
-                <th className="text-left px-4 py-3 text-xs font-bold text-neutral-400 uppercase tracking-wider hidden sm:table-cell">
-                  {t("list.columns.updatedAt")}
-                </th>
-                <th className="text-right px-4 py-3 text-xs font-bold text-neutral-400 uppercase tracking-wider">
-                  {t("list.columns.total")}
-                </th>
+                {(["name", "responsiblePerson", "createdAt", "updatedAt", "grandTotal"] as SortColumn[]).map((col) => {
+                  const isActive = sortCol === col;
+                  const label = col === "name" ? t("list.columns.name")
+                    : col === "responsiblePerson" ? t("list.columns.responsiblePerson")
+                    : col === "createdAt" ? t("list.columns.createdAt")
+                    : col === "updatedAt" ? t("list.columns.updatedAt")
+                    : t("list.columns.total");
+                  const isRight = col === "grandTotal";
+                  const hidden = col === "responsiblePerson" ? "hidden md:table-cell"
+                    : col === "createdAt" || col === "updatedAt" ? "hidden sm:table-cell"
+                    : "";
+                  return (
+                    <th
+                      key={col}
+                      className={`px-4 py-3 text-xs font-bold uppercase tracking-wider ${hidden} ${isRight ? "text-right" : "text-left"}`}
+                    >
+                      <button
+                        onClick={() => handleSort(col)}
+                        className={`inline-flex items-center gap-1 hover:text-white transition-colors ${isActive ? "text-safety-400" : "text-neutral-400"}`}
+                      >
+                        {label}
+                        <span className="text-xs">
+                          {isActive ? (sortDir === "asc" ? "▲" : "▼") : "⇅"}
+                        </span>
+                      </button>
+                    </th>
+                  );
+                })}
                 <th className="text-right px-4 py-3 text-xs font-bold text-neutral-400 uppercase tracking-wider">
                   {t("list.columns.items")}
                 </th>
@@ -178,6 +224,9 @@ function SpecListInner({ lang }: Props) {
                   </td>
                   <td className="px-4 py-4 text-neutral-400 hidden md:table-cell">
                     {spec.responsiblePerson || "\u2014"}
+                  </td>
+                  <td className="px-4 py-4 text-neutral-400 text-sm hidden sm:table-cell">
+                    {formatDate(spec.createdAt, lang)}
                   </td>
                   <td className="px-4 py-4 text-neutral-400 text-sm hidden sm:table-cell">
                     {formatDate(spec.updatedAt, lang)}
