@@ -1,4 +1,5 @@
 import PDFDocument from "pdfkit";
+import Decimal from "decimal.js";
 import { lineTotal, grandTotals, roundForDisplay } from "@materialspec/shared";
 
 import svExport from "@materialspec/shared/i18n/sv/export.json" with { type: "json" };
@@ -94,7 +95,7 @@ export async function renderPdf(
       doc.text(fmtNum(item.quantity, lang), cols[2], y, {
         width: cols[3] - cols[2] - 5,
       });
-      doc.text(fmtCurrency(roundForDisplay(item.pricePerUnit), lang), cols[3], y, {
+      doc.text(fmtCurrency(roundForDisplay(new Decimal(item.pricePerUnit)), lang), cols[3], y, {
         width: cols[4] - cols[3] - 5,
       });
       doc.text(`${(parseFloat(item.taxRate) * 100).toFixed(0)} %`, cols[4], y, {
