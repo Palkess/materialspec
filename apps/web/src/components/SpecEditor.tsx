@@ -39,10 +39,9 @@ const specFormSchema = z.object({
       unit: z.enum(UNITS).default("pcs"),
       quantity: z.string().default("0"),
       pricePerUnit: z.string().default("0"),
-      taxRate: z.string().refine(
-        (v) => VAT_RATES.map(String).includes(v),
-        "Invalid VAT rate"
-      ).default("0.25"),
+      // No refine here — Postgres returns "0.2500" etc. with trailing zeros.
+      // Normalization happens in onSave before sending to the API.
+      taxRate: z.string().default("0.25"),
     })
   ).default([]),
 });
@@ -218,10 +217,17 @@ function SpecEditorInner({ lang, specId, userName }: Props) {
     setSaving(true);
     setSaveError("");
     try {
-      // Filter empty trailing rows
-      const filteredItems = data.items.filter(
-        (item) => item.name.trim() !== ""
-      );
+      // Filter empty trailing rows and normalize numeric strings from Postgres.
+      // Postgres numeric(x,y) returns trailing zeros (e.g. "0.2500", "5.000")
+      // which fail the API's VAT_RATES.map(String) check and regex patterns.
+      const filteredItems = data.items
+        .filter((item) => item.name.trim() !== "")
+        .map((item) => ({
+          ...item,
+          quantity: item.quantity.replace(/\.?0+$/, "") || "0",
+          pricePerUnit: item.pricePerUnit.replace(/\.?0+$/, "") || "0",
+          taxRate: parseFloat(item.taxRate).toString(),
+        }));
 
       if (savedId) {
         await trpc.specs.update.mutate({
