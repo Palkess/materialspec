@@ -1,0 +1,19 @@
+{
+  "auth": {
+    "emailTaken": "E-postadressen är redan registrerad",
+    "invalidCredentials": "Felaktig e-post eller lösenord",
+    "unauthorized": "Du måste logga in",
+    "forbidden": "Du har inte behörighet"
+  },
+  "spec": {
+    "notFound": "Specifikationen hittades inte",
+    "nameRequired": "Namn krävs"
+  },
+  "generic": "Något gick fel, försök igen",
+  "validation": {
+    "required": "Detta fält är obligatoriskt",
+    "email": "Ange en giltig e-postadress",
+    "minLength": "Minst {{min}} tecken",
+    "maxLength": "Högst {{max}} tecken"
+  }
+}

@@ -1,0 +1,23 @@
+{
+  "title": "Materialspecifikation",
+  "generatedAt": "Genererad",
+  "responsiblePerson": "Ansvarig person",
+  "columns": {
+    "name": "Namn",
+    "description": "Beskrivning",
+    "unit": "Enhet",
+    "quantity": "Antal",
+    "pricePerUnit": "Pris/enhet",
+    "vatRate": "Moms %",
+    "tax": "Moms",
+    "total": "Totalt"
+  },
+  "totals": {
+    "vatGroup": "Momsgrupp {{rate}} %",
+    "subtotal": "Netto",
+    "vat": "Moms",
+    "grandTotal": "Totalt"
+  },
+  "currency": "kr",
+  "page": "Sida"
+}

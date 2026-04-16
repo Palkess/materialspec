@@ -97,4 +97,50 @@ export const authRouter = router({
       isAdmin: ctx.user.isAdmin,
     };
   }),
+
+  changeLocale: protectedProcedure
+    .input(z.object({ locale: z.enum(["sv", "en"]) }))
+    .mutation(async ({ input, ctx }) => {
+      await db
+        .update(users)
+        .set({ locale: input.locale })
+        .where(eq(users.id, ctx.user.id));
+      return { locale: input.locale };
+    }),
+
+  changePassword: protectedProcedure
+    .input(
+      z.object({
+        currentPassword: z.string().min(1),
+        newPassword: z.string().min(8).max(128),
+      })
+    )
+    .mutation(async ({ input, ctx }) => {
+      const [user] = await db
+        .select()
+        .from(users)
+        .where(eq(users.id, ctx.user.id))
+        .limit(1);
+
+      if (!user) {
+        throw new Error("errors.auth.unauthorized");
+      }
+
+      const valid = await verify(
+        user.passwordHash,
+        input.currentPassword,
+        argon2Options
+      );
+      if (!valid) {
+        throw new Error("errors.auth.invalidCredentials");
+      }
+
+      const newHash = await hash(input.newPassword, argon2Options);
+      await db
+        .update(users)
+        .set({ passwordHash: newHash })
+        .where(eq(users.id, ctx.user.id));
+
+      return { success: true };
+    }),
 });

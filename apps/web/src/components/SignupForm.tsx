@@ -2,7 +2,9 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { I18nextProvider, useTranslation } from "react-i18next";
 import { trpc } from "../lib/trpc";
+import { createI18n } from "../lib/i18n";
 
 const signupSchema = z.object({
   email: z.string().email(),
@@ -16,35 +18,9 @@ interface Props {
   lang: "sv" | "en";
 }
 
-const t = {
-  sv: {
-    title: "Skapa konto",
-    email: "E-post",
-    name: "Namn",
-    password: "Lösenord",
-    passwordHint: "Minst 8 tecken",
-    submit: "Skapa konto",
-    hasAccount: "Har du redan ett konto?",
-    login: "Logga in",
-    errorEmailTaken: "E-postadressen är redan registrerad",
-    errorGeneric: "Något gick fel, försök igen",
-  },
-  en: {
-    title: "Sign up",
-    email: "Email",
-    name: "Name",
-    password: "Password",
-    passwordHint: "At least 8 characters",
-    submit: "Sign up",
-    hasAccount: "Already have an account?",
-    login: "Log in",
-    errorEmailTaken: "Email address is already registered",
-    errorGeneric: "Something went wrong, please try again",
-  },
-};
-
-export default function SignupForm({ lang }: Props) {
-  const labels = t[lang];
+function SignupFormInner({ lang }: Props) {
+  const { t } = useTranslation("auth");
+  const { t: tErrors } = useTranslation("errors");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -61,12 +37,11 @@ export default function SignupForm({ lang }: Props) {
       await trpc.auth.signup.mutate(data);
       window.location.href = `/${lang}/specs`;
     } catch (err: unknown) {
-      const message =
-        err instanceof Error ? err.message : "";
+      const message = err instanceof Error ? err.message : "";
       if (message.includes("emailTaken")) {
-        setError(labels.errorEmailTaken);
+        setError(tErrors("auth.emailTaken"));
       } else {
-        setError(labels.errorGeneric);
+        setError(tErrors("generic"));
       }
     } finally {
       setLoading(false);
@@ -74,11 +49,13 @@ export default function SignupForm({ lang }: Props) {
   };
 
   return (
-    <div className="w-full max-w-md mx-auto">
-      <h1 className="text-3xl font-bold text-white mb-8">{labels.title}</h1>
+    <div className="w-full max-w-md mx-auto bg-concrete-900 border border-concrete-800 rounded-lg p-8">
+      <h1 className="text-3xl font-bold text-white mb-8 tracking-tight">
+        {t("signup.title")}
+      </h1>
 
       {error && (
-        <div className="bg-red-900/50 border border-red-500 text-red-200 px-4 py-3 rounded mb-6">
+        <div className="bg-red-900/50 border-l-4 border-red-500 text-red-200 px-4 py-3 rounded mb-6 font-bold text-sm">
           {error}
         </div>
       )}
@@ -87,58 +64,64 @@ export default function SignupForm({ lang }: Props) {
         <div>
           <label
             htmlFor="name"
-            className="block text-sm font-bold text-gray-300 mb-2"
+            className="block font-bold text-neutral-200 mb-2 uppercase text-sm tracking-wide"
           >
-            {labels.name}
+            {t("signup.name")}
           </label>
           <input
             id="name"
             type="text"
             autoComplete="name"
             {...register("name")}
-            className="w-full px-4 py-3 bg-concrete-900 border border-concrete-700 rounded text-white placeholder-gray-500 focus:outline-none focus:border-safety-500 focus:ring-1 focus:ring-safety-500"
+            className="w-full px-4 py-3 bg-concrete-800 border border-concrete-600 rounded text-white placeholder-gray-500 focus:outline-none focus:border-safety-500 focus:ring-1 focus:ring-safety-500 transition-colors"
           />
           {errors.name && (
-            <p className="text-red-400 text-sm mt-1">{errors.name.message}</p>
+            <p className="text-red-400 text-sm mt-1 font-bold">
+              {errors.name.message}
+            </p>
           )}
         </div>
 
         <div>
           <label
             htmlFor="email"
-            className="block text-sm font-bold text-gray-300 mb-2"
+            className="block font-bold text-neutral-200 mb-2 uppercase text-sm tracking-wide"
           >
-            {labels.email}
+            {t("signup.email")}
           </label>
           <input
             id="email"
             type="email"
             autoComplete="email"
             {...register("email")}
-            className="w-full px-4 py-3 bg-concrete-900 border border-concrete-700 rounded text-white placeholder-gray-500 focus:outline-none focus:border-safety-500 focus:ring-1 focus:ring-safety-500"
+            className="w-full px-4 py-3 bg-concrete-800 border border-concrete-600 rounded text-white placeholder-gray-500 focus:outline-none focus:border-safety-500 focus:ring-1 focus:ring-safety-500 transition-colors"
           />
           {errors.email && (
-            <p className="text-red-400 text-sm mt-1">{errors.email.message}</p>
+            <p className="text-red-400 text-sm mt-1 font-bold">
+              {errors.email.message}
+            </p>
           )}
         </div>
 
         <div>
           <label
             htmlFor="password"
-            className="block text-sm font-bold text-gray-300 mb-2"
+            className="block font-bold text-neutral-200 mb-2 uppercase text-sm tracking-wide"
           >
-            {labels.password}
+            {t("signup.password")}
           </label>
           <input
             id="password"
             type="password"
             autoComplete="new-password"
             {...register("password")}
-            className="w-full px-4 py-3 bg-concrete-900 border border-concrete-700 rounded text-white placeholder-gray-500 focus:outline-none focus:border-safety-500 focus:ring-1 focus:ring-safety-500"
+            className="w-full px-4 py-3 bg-concrete-800 border border-concrete-600 rounded text-white placeholder-gray-500 focus:outline-none focus:border-safety-500 focus:ring-1 focus:ring-safety-500 transition-colors"
           />
-          <p className="text-gray-500 text-xs mt-1">{labels.passwordHint}</p>
+          <p className="text-neutral-500 text-xs mt-1">
+            {t("signup.passwordHint")}
+          </p>
           {errors.password && (
-            <p className="text-red-400 text-sm mt-1">
+            <p className="text-red-400 text-sm mt-1 font-bold">
               {errors.password.message}
             </p>
           )}
@@ -147,21 +130,30 @@ export default function SignupForm({ lang }: Props) {
         <button
           type="submit"
           disabled={loading}
-          className="w-full min-h-btn bg-safety-500 hover:bg-safety-400 text-concrete-950 font-bold py-3 px-6 rounded transition-colors disabled:opacity-50"
+          className="w-full min-h-btn bg-safety-500 hover:bg-safety-400 text-concrete-950 font-bold text-lg py-3 px-6 rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed uppercase tracking-wide"
         >
-          {loading ? "..." : labels.submit}
+          {loading ? "..." : t("signup.submit")}
         </button>
       </form>
 
-      <p className="text-gray-400 text-center mt-6">
-        {labels.hasAccount}{" "}
+      <p className="text-neutral-400 text-center mt-6">
+        {t("signup.hasAccount")}{" "}
         <a
           href={`/${lang}/login`}
-          className="text-safety-500 hover:text-safety-400 font-bold"
+          className="text-safety-500 hover:text-safety-400 font-bold underline underline-offset-2"
         >
-          {labels.login}
+          {t("signup.login")}
         </a>
       </p>
     </div>
+  );
+}
+
+export default function SignupForm({ lang }: Props) {
+  const i18n = createI18n(lang);
+  return (
+    <I18nextProvider i18n={i18n}>
+      <SignupFormInner lang={lang} />
+    </I18nextProvider>
   );
 }

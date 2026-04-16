@@ -1,0 +1,46 @@
+{
+  "list": {
+    "title": "Specifications",
+    "newSpec": "New specification",
+    "searchPlaceholder": "Search specifications...",
+    "empty": "You don't have any specifications yet",
+    "emptyHint": "Create your first specification to get started",
+    "columns": {
+      "name": "Name",
+      "responsiblePerson": "Responsible",
+      "updatedAt": "Updated",
+      "total": "Total",
+      "items": "Rows"
+    },
+    "duplicate": "Duplicate",
+    "delete": "Delete",
+    "deleteConfirm": "Are you sure you want to delete this specification?"
+  },
+  "editor": {
+    "name": "Name",
+    "namePlaceholder": "Specification name",
+    "description": "Description",
+    "descriptionPlaceholder": "Optional description",
+    "responsiblePerson": "Responsible person",
+    "responsiblePersonPlaceholder": "Name of responsible person",
+    "addRow": "Add row",
+    "item": {
+      "name": "Name",
+      "description": "Description",
+      "vatRate": "VAT",
+      "unit": "Unit",
+      "quantity": "Qty",
+      "pricePerUnit": "Price/unit",
+      "tax": "Tax",
+      "total": "Total"
+    },
+    "totals": {
+      "title": "Summary",
+      "vatGroup": "VAT group {{rate}}%",
+      "subtotal": "Net",
+      "vat": "VAT",
+      "grandTotal": "Grand total"
+    }
+  },
+  "copySuffix": " (copy)"
+}

@@ -2,7 +2,9 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { I18nextProvider, useTranslation } from "react-i18next";
 import { trpc } from "../lib/trpc";
+import { createI18n } from "../lib/i18n";
 
 const loginSchema = z.object({
   email: z.string().email(),
@@ -15,29 +17,9 @@ interface Props {
   lang: "sv" | "en";
 }
 
-const t = {
-  sv: {
-    title: "Logga in",
-    email: "E-post",
-    password: "Lösenord",
-    submit: "Logga in",
-    noAccount: "Har du inget konto?",
-    signup: "Skapa konto",
-    error: "Felaktig e-post eller lösenord",
-  },
-  en: {
-    title: "Log in",
-    email: "Email",
-    password: "Password",
-    submit: "Log in",
-    noAccount: "Don't have an account?",
-    signup: "Sign up",
-    error: "Invalid email or password",
-  },
-};
-
-export default function LoginForm({ lang }: Props) {
-  const labels = t[lang];
+function LoginFormInner({ lang }: Props) {
+  const { t } = useTranslation("auth");
+  const { t: tErrors } = useTranslation("errors");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -54,18 +36,20 @@ export default function LoginForm({ lang }: Props) {
       await trpc.auth.login.mutate(data);
       window.location.href = `/${lang}/specs`;
     } catch {
-      setError(labels.error);
+      setError(tErrors("auth.invalidCredentials"));
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="w-full max-w-md mx-auto">
-      <h1 className="text-3xl font-bold text-white mb-8">{labels.title}</h1>
+    <div className="w-full max-w-md mx-auto bg-concrete-900 border border-concrete-800 rounded-lg p-8">
+      <h1 className="text-3xl font-bold text-white mb-8 tracking-tight">
+        {t("login.title")}
+      </h1>
 
       {error && (
-        <div className="bg-red-900/50 border border-red-500 text-red-200 px-4 py-3 rounded mb-6">
+        <div className="bg-red-900/50 border-l-4 border-red-500 text-red-200 px-4 py-3 rounded mb-6 font-bold text-sm">
           {error}
         </div>
       )}
@@ -74,38 +58,40 @@ export default function LoginForm({ lang }: Props) {
         <div>
           <label
             htmlFor="email"
-            className="block text-sm font-bold text-gray-300 mb-2"
+            className="block font-bold text-neutral-200 mb-2 uppercase text-sm tracking-wide"
           >
-            {labels.email}
+            {t("login.email")}
           </label>
           <input
             id="email"
             type="email"
             autoComplete="email"
             {...register("email")}
-            className="w-full px-4 py-3 bg-concrete-900 border border-concrete-700 rounded text-white placeholder-gray-500 focus:outline-none focus:border-safety-500 focus:ring-1 focus:ring-safety-500"
+            className="w-full px-4 py-3 bg-concrete-800 border border-concrete-600 rounded text-white placeholder-gray-500 focus:outline-none focus:border-safety-500 focus:ring-1 focus:ring-safety-500 transition-colors"
           />
           {errors.email && (
-            <p className="text-red-400 text-sm mt-1">{errors.email.message}</p>
+            <p className="text-red-400 text-sm mt-1 font-bold">
+              {errors.email.message}
+            </p>
           )}
         </div>
 
         <div>
           <label
             htmlFor="password"
-            className="block text-sm font-bold text-gray-300 mb-2"
+            className="block font-bold text-neutral-200 mb-2 uppercase text-sm tracking-wide"
           >
-            {labels.password}
+            {t("login.password")}
           </label>
           <input
             id="password"
             type="password"
             autoComplete="current-password"
             {...register("password")}
-            className="w-full px-4 py-3 bg-concrete-900 border border-concrete-700 rounded text-white placeholder-gray-500 focus:outline-none focus:border-safety-500 focus:ring-1 focus:ring-safety-500"
+            className="w-full px-4 py-3 bg-concrete-800 border border-concrete-600 rounded text-white placeholder-gray-500 focus:outline-none focus:border-safety-500 focus:ring-1 focus:ring-safety-500 transition-colors"
           />
           {errors.password && (
-            <p className="text-red-400 text-sm mt-1">
+            <p className="text-red-400 text-sm mt-1 font-bold">
               {errors.password.message}
             </p>
           )}
@@ -114,21 +100,30 @@ export default function LoginForm({ lang }: Props) {
         <button
           type="submit"
           disabled={loading}
-          className="w-full min-h-btn bg-safety-500 hover:bg-safety-400 text-concrete-950 font-bold py-3 px-6 rounded transition-colors disabled:opacity-50"
+          className="w-full min-h-btn bg-safety-500 hover:bg-safety-400 text-concrete-950 font-bold text-lg py-3 px-6 rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed uppercase tracking-wide"
         >
-          {loading ? "..." : labels.submit}
+          {loading ? "..." : t("login.submit")}
         </button>
       </form>
 
-      <p className="text-gray-400 text-center mt-6">
-        {labels.noAccount}{" "}
+      <p className="text-neutral-400 text-center mt-6">
+        {t("login.noAccount")}{" "}
         <a
           href={`/${lang}/signup`}
-          className="text-safety-500 hover:text-safety-400 font-bold"
+          className="text-safety-500 hover:text-safety-400 font-bold underline underline-offset-2"
         >
-          {labels.signup}
+          {t("login.signup")}
         </a>
       </p>
     </div>
+  );
+}
+
+export default function LoginForm({ lang }: Props) {
+  const i18n = createI18n(lang);
+  return (
+    <I18nextProvider i18n={i18n}>
+      <LoginFormInner lang={lang} />
+    </I18nextProvider>
   );
 }

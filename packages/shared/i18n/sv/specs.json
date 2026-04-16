@@ -1,0 +1,46 @@
+{
+  "list": {
+    "title": "Specifikationer",
+    "newSpec": "Ny specifikation",
+    "searchPlaceholder": "Sök specifikationer...",
+    "empty": "Du har inga specifikationer ännu",
+    "emptyHint": "Skapa din första specifikation för att komma igång",
+    "columns": {
+      "name": "Namn",
+      "responsiblePerson": "Ansvarig",
+      "updatedAt": "Uppdaterad",
+      "total": "Totalt",
+      "items": "Rader"
+    },
+    "duplicate": "Duplicera",
+    "delete": "Ta bort",
+    "deleteConfirm": "Vill du verkligen ta bort denna specifikation?"
+  },
+  "editor": {
+    "name": "Namn",
+    "namePlaceholder": "Specifikationsnamn",
+    "description": "Beskrivning",
+    "descriptionPlaceholder": "Valfri beskrivning",
+    "responsiblePerson": "Ansvarig person",
+    "responsiblePersonPlaceholder": "Namn på ansvarig",
+    "addRow": "Lägg till rad",
+    "item": {
+      "name": "Namn",
+      "description": "Beskrivning",
+      "vatRate": "Moms",
+      "unit": "Enhet",
+      "quantity": "Antal",
+      "pricePerUnit": "Pris/enhet",
+      "tax": "Moms",
+      "total": "Totalt"
+    },
+    "totals": {
+      "title": "Summering",
+      "vatGroup": "Momsgrupp {{rate}}%",
+      "subtotal": "Netto",
+      "vat": "Moms",
+      "grandTotal": "Totalt"
+    }
+  },
+  "copySuffix": " (kopia)"
+}

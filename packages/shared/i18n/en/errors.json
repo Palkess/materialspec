@@ -1,0 +1,19 @@
+{
+  "auth": {
+    "emailTaken": "Email address is already registered",
+    "invalidCredentials": "Invalid email or password",
+    "unauthorized": "You must be logged in",
+    "forbidden": "You don't have permission"
+  },
+  "spec": {
+    "notFound": "Specification not found",
+    "nameRequired": "Name is required"
+  },
+  "generic": "Something went wrong, please try again",
+  "validation": {
+    "required": "This field is required",
+    "email": "Enter a valid email address",
+    "minLength": "At least {{min}} characters",
+    "maxLength": "At most {{max}} characters"
+  }
+}

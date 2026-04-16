@@ -1,0 +1,23 @@
+{
+  "title": "Material Specification",
+  "generatedAt": "Generated",
+  "responsiblePerson": "Responsible person",
+  "columns": {
+    "name": "Name",
+    "description": "Description",
+    "unit": "Unit",
+    "quantity": "Qty",
+    "pricePerUnit": "Price/unit",
+    "vatRate": "VAT %",
+    "tax": "Tax",
+    "total": "Total"
+  },
+  "totals": {
+    "vatGroup": "VAT group {{rate}} %",
+    "subtotal": "Net",
+    "vat": "VAT",
+    "grandTotal": "Grand total"
+  },
+  "currency": "SEK",
+  "page": "Page"
+}
