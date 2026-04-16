@@ -14,15 +14,23 @@ export const specsRouter = router({
         responsiblePerson: specifications.responsiblePerson,
         createdAt: specifications.createdAt,
         updatedAt: specifications.updatedAt,
-        itemCount: sql<number>`(SELECT COUNT(*) FROM item WHERE item.specification_id = ${specifications.id})::int`,
-        grandTotal: sql<string>`COALESCE((SELECT SUM(quantity * price_per_unit * (1 + tax_rate)) FROM item WHERE item.specification_id = ${specifications.id}), 0)::text`,
+        itemCount: sql<number>`COUNT(${items.id})::int`,
+        grandTotal: sql<string>`COALESCE(SUM(${items.quantity}::numeric * ${items.pricePerUnit}::numeric * (1 + ${items.taxRate}::numeric)), 0)::text`,
       })
       .from(specifications)
+      .leftJoin(items, eq(items.specificationId, specifications.id))
       .where(
         and(
           eq(specifications.userId, ctx.user.id),
           isNull(specifications.deletedAt)
         )
+      )
+      .groupBy(
+        specifications.id,
+        specifications.name,
+        specifications.responsiblePerson,
+        specifications.createdAt,
+        specifications.updatedAt
       )
       .orderBy(desc(specifications.updatedAt));
 
