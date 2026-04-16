@@ -1,6 +1,7 @@
 import { serve } from "@hono/node-server";
 import { Hono } from "hono";
 import { cors } from "hono/cors";
+import { runMigrations } from "./db/migrate.js";
 
 const app = new Hono();
 
@@ -13,6 +14,16 @@ app.get("/health", (c) => {
 const port = Number(process.env.API_PORT) || 3001;
 const host = process.env.API_HOST || "0.0.0.0";
 
-console.log(`API server starting on ${host}:${port}`);
+async function main() {
+  if (process.env.RUN_MIGRATIONS_ON_BOOT === "true") {
+    await runMigrations();
+  }
 
-serve({ fetch: app.fetch, port, hostname: host });
+  console.log(`API server starting on ${host}:${port}`);
+  serve({ fetch: app.fetch, port, hostname: host });
+}
+
+main().catch((err) => {
+  console.error("Failed to start API:", err);
+  process.exit(1);
+});

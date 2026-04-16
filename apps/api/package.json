@@ -7,16 +7,21 @@
     "dev": "tsx watch src/index.ts",
     "build": "tsc",
     "start": "node dist/index.js",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "drizzle:generate": "drizzle-kit generate",
+    "drizzle:migrate": "drizzle-kit migrate"
   },
   "dependencies": {
     "@hono/node-server": "^1.14.1",
+    "@materialspec/shared": "*",
+    "drizzle-orm": "^0.45.2",
     "hono": "^4.7.5",
-    "@materialspec/shared": "*"
+    "postgres": "^3.4.9"
   },
   "devDependencies": {
+    "@types/node": "^22.14.1",
+    "drizzle-kit": "^0.31.10",
     "tsx": "^4.19.3",
-    "typescript": "^5.7.3",
-    "@types/node": "^22.14.1"
+    "typescript": "^5.7.3"
   }
 }
