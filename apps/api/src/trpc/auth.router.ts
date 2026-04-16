@@ -1,0 +1,100 @@
+import { z } from "zod";
+import { hash, verify } from "@node-rs/argon2";
+import { eq } from "drizzle-orm";
+import { router, publicProcedure, protectedProcedure } from "./trpc.js";
+import { lucia } from "../auth/lucia.js";
+import { db } from "../db/index.js";
+import { users } from "../db/schema.js";
+
+const argon2Options = {
+  memoryCost: 19456,
+  timeCost: 2,
+  outputLen: 32,
+  parallelism: 1,
+};
+
+export const authRouter = router({
+  signup: publicProcedure
+    .input(
+      z.object({
+        email: z.string().email(),
+        name: z.string().min(1).max(255),
+        password: z.string().min(8).max(128),
+      })
+    )
+    .mutation(async ({ input, ctx }) => {
+      const existing = await db
+        .select()
+        .from(users)
+        .where(eq(users.email, input.email.toLowerCase()))
+        .limit(1);
+
+      if (existing.length > 0) {
+        throw new Error("errors.auth.emailTaken");
+      }
+
+      const passwordHash = await hash(input.password, argon2Options);
+
+      const [user] = await db
+        .insert(users)
+        .values({
+          email: input.email.toLowerCase(),
+          name: input.name,
+          passwordHash,
+        })
+        .returning();
+
+      const session = await lucia.createSession(user.id, {});
+      const cookie = lucia.createSessionCookie(session.id);
+      ctx.setCookie(cookie.name, cookie.value, cookie.attributes);
+
+      return { id: user.id };
+    }),
+
+  login: publicProcedure
+    .input(
+      z.object({
+        email: z.string().email(),
+        password: z.string().min(1),
+      })
+    )
+    .mutation(async ({ input, ctx }) => {
+      const [user] = await db
+        .select()
+        .from(users)
+        .where(eq(users.email, input.email.toLowerCase()))
+        .limit(1);
+
+      if (!user) {
+        throw new Error("errors.auth.invalidCredentials");
+      }
+
+      const valid = await verify(user.passwordHash, input.password, argon2Options);
+      if (!valid) {
+        throw new Error("errors.auth.invalidCredentials");
+      }
+
+      const session = await lucia.createSession(user.id, {});
+      const cookie = lucia.createSessionCookie(session.id);
+      ctx.setCookie(cookie.name, cookie.value, cookie.attributes);
+
+      return { id: user.id };
+    }),
+
+  logout: protectedProcedure.mutation(async ({ ctx }) => {
+    await lucia.invalidateSession(ctx.session.id);
+    const cookie = lucia.createBlankSessionCookie();
+    ctx.setCookie(cookie.name, cookie.value, cookie.attributes);
+    return { success: true };
+  }),
+
+  me: protectedProcedure.query(({ ctx }) => {
+    return {
+      id: ctx.user.id,
+      email: ctx.user.email,
+      name: ctx.user.name,
+      locale: ctx.user.locale,
+      isAdmin: ctx.user.isAdmin,
+    };
+  }),
+});

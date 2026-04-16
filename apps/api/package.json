@@ -13,10 +13,16 @@
   },
   "dependencies": {
     "@hono/node-server": "^1.14.1",
+    "@hono/trpc-server": "^0.4.2",
+    "@lucia-auth/adapter-drizzle": "^1.1.0",
     "@materialspec/shared": "*",
+    "@node-rs/argon2": "^2.0.2",
+    "@trpc/server": "^11.16.0",
     "drizzle-orm": "^0.45.2",
     "hono": "^4.7.5",
-    "postgres": "^3.4.9"
+    "lucia": "^3.2.2",
+    "postgres": "^3.4.9",
+    "zod": "^3.25.76"
   },
   "devDependencies": {
     "@types/node": "^22.14.1",

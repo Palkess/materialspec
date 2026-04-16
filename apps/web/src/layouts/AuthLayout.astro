@@ -1,0 +1,37 @@
+---
+interface Props {
+  title: string;
+  lang: "sv" | "en";
+}
+
+const { title, lang } = Astro.props;
+const otherLang = lang === "sv" ? "en" : "sv";
+const currentPath = Astro.url.pathname.replace(`/${lang}/`, `/${otherLang}/`);
+---
+
+<html lang={lang}>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title} — Materialspec</title>
+  </head>
+  <body class="min-h-screen bg-concrete-950 text-white">
+    <header class="border-b border-concrete-800 px-6 py-4 flex items-center justify-between">
+      <a href={`/${lang}/`} class="text-xl font-bold text-safety-500">
+        Materialspec
+      </a>
+      <a
+        href={currentPath}
+        class="text-sm text-gray-400 hover:text-white font-bold uppercase"
+      >
+        {otherLang === "sv" ? "Svenska" : "English"}
+      </a>
+    </header>
+    <main class="flex items-center justify-center min-h-[calc(100vh-73px)] px-4 py-12">
+      <slot />
+    </main>
+    <script is:inline define:vars={{ apiUrl: import.meta.env.PUBLIC_API_URL || "http://localhost:3002" }}>
+      window.__API_URL__ = apiUrl;
+    </script>
+  </body>
+</html>
