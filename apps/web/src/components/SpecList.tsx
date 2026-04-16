@@ -57,6 +57,18 @@ function SpecListInner({ lang }: Props) {
   const [loading, setLoading] = useState(true);
   const [sortCol, setSortCol] = useState<SortColumn>("createdAt");
   const [sortDir, setSortDir] = useState<SortDir>("desc");
+  const [openMenu, setOpenMenu] = useState<string | null>(null);
+
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      if (!target.closest("[data-spec-menu]")) {
+        setOpenMenu(null);
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
   const apiUrl = getApiUrl();
 
   const loadSpecs = async () => {
@@ -238,25 +250,48 @@ function SpecListInner({ lang }: Props) {
                     {spec.itemCount}
                   </td>
                   <td className="px-4 py-4 text-right">
-                    <div className="flex gap-2 justify-end flex-wrap">
-                      <a
-                        href={`${apiUrl}/specs/${spec.id}/export.xlsx?lang=${lang}`}
-                        className="text-xs px-3 py-2 bg-concrete-800 hover:bg-concrete-700 text-neutral-200 rounded font-bold uppercase tracking-wide transition-colors"
-                      >
-                        {t("list.exportXlsx")}
-                      </a>
-                      <a
-                        href={`${apiUrl}/specs/${spec.id}/export.pdf?lang=${lang}`}
-                        className="text-xs px-3 py-2 bg-concrete-800 hover:bg-concrete-700 text-neutral-200 rounded font-bold uppercase tracking-wide transition-colors"
-                      >
-                        {t("list.exportPdf")}
-                      </a>
-                      <button
-                        onClick={() => handleDuplicate(spec.id)}
-                        className="text-xs px-3 py-2 bg-concrete-800 hover:bg-concrete-700 text-neutral-200 rounded font-bold uppercase tracking-wide transition-colors"
-                      >
-                        {t("list.duplicate")}
-                      </button>
+                    <div className="flex gap-2 justify-end items-center">
+                      {/* Three-dot menu */}
+                      <div className="relative" data-spec-menu={spec.id}>
+                        <button
+                          onClick={() => setOpenMenu(openMenu === spec.id ? null : spec.id)}
+                          className="p-2 rounded text-neutral-400 hover:text-white hover:bg-concrete-700 transition-colors"
+                          aria-label="More actions"
+                          title="More actions"
+                        >
+                          <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+                            <circle cx="8" cy="2.5" r="1.5"/>
+                            <circle cx="8" cy="8" r="1.5"/>
+                            <circle cx="8" cy="13.5" r="1.5"/>
+                          </svg>
+                        </button>
+                        {openMenu === spec.id && (
+                          <div className="absolute right-0 top-full mt-1 z-10 w-44 bg-concrete-800 border border-concrete-600 rounded-lg shadow-xl overflow-hidden">
+                            <a
+                              href={`${apiUrl}/specs/${spec.id}/export.xlsx?lang=${lang}`}
+                              className="flex items-center gap-2 px-4 py-2.5 text-sm text-neutral-200 hover:bg-concrete-700 hover:text-white transition-colors font-bold uppercase tracking-wide"
+                              onClick={() => setOpenMenu(null)}
+                            >
+                              {t("list.exportXlsx")}
+                            </a>
+                            <a
+                              href={`${apiUrl}/specs/${spec.id}/export.pdf?lang=${lang}`}
+                              className="flex items-center gap-2 px-4 py-2.5 text-sm text-neutral-200 hover:bg-concrete-700 hover:text-white transition-colors font-bold uppercase tracking-wide"
+                              onClick={() => setOpenMenu(null)}
+                            >
+                              {t("list.exportPdf")}
+                            </a>
+                            <div className="border-t border-concrete-600" />
+                            <button
+                              onClick={() => { setOpenMenu(null); handleDuplicate(spec.id); }}
+                              className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-neutral-200 hover:bg-concrete-700 hover:text-white transition-colors font-bold uppercase tracking-wide text-left"
+                            >
+                              {t("list.duplicate")}
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                      {/* Delete stays visible */}
                       <button
                         onClick={() => handleDelete(spec.id)}
                         className="text-xs px-3 py-2 bg-red-900/50 hover:bg-red-700/50 text-red-300 hover:text-red-200 rounded font-bold uppercase tracking-wide transition-colors"
