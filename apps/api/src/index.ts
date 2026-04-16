@@ -6,6 +6,12 @@ import { appRouter } from "./trpc/router.js";
 import { createContext } from "./trpc/context.js";
 import { runMigrations } from "./db/migrate.js";
 import { seedAdmin } from "./auth/seed.js";
+import { renderXlsx } from "./export/xlsx.js";
+import { renderPdf } from "./export/pdf.js";
+import { lucia } from "./auth/lucia.js";
+import { db } from "./db/index.js";
+import { specifications, items } from "./db/schema.js";
+import { eq, and, isNull } from "drizzle-orm";
 
 const app = new Hono();
 
@@ -19,6 +25,71 @@ app.use(
 
 app.get("/health", (c) => {
   return c.json({ status: "ok" });
+});
+
+// Export routes (plain GET, not tRPC)
+app.get("/specs/:id/export.:ext", async (c) => {
+  const { id, ext } = c.req.param();
+  if (ext !== "xlsx" && ext !== "pdf") {
+    return c.json({ error: "Invalid format" }, 400);
+  }
+
+  // Authenticate via Lucia session cookie
+  const cookieHeader = c.req.header("Cookie") ?? "";
+  const sessionId = lucia.readSessionCookie(cookieHeader);
+  if (!sessionId) {
+    return c.json({ error: "Unauthorized" }, 401);
+  }
+
+  const { session, user } = await lucia.validateSession(sessionId);
+  if (!session || !user) {
+    return c.json({ error: "Unauthorized" }, 401);
+  }
+
+  // Load spec (enforcing ownership)
+  const [spec] = await db
+    .select()
+    .from(specifications)
+    .where(
+      and(
+        eq(specifications.id, id),
+        eq(specifications.userId, user.id),
+        isNull(specifications.deletedAt)
+      )
+    )
+    .limit(1);
+
+  if (!spec) {
+    return c.json({ error: "Not found" }, 403);
+  }
+
+  const specItems = await db
+    .select()
+    .from(items)
+    .where(eq(items.specificationId, id))
+    .orderBy(items.sortOrder);
+
+  const lang = (user.locale as "sv" | "en") || "sv";
+  const filename = `${spec.name.replace(/[^a-zA-Z0-9åäöÅÄÖ\- ]/g, "")}.${ext}`;
+
+  if (ext === "xlsx") {
+    const buffer = await renderXlsx(spec, specItems, lang);
+    return new Response(buffer, {
+      headers: {
+        "Content-Type":
+          "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        "Content-Disposition": `attachment; filename="${filename}"`,
+      },
+    });
+  } else {
+    const buffer = await renderPdf(spec, specItems, lang);
+    return new Response(buffer, {
+      headers: {
+        "Content-Type": "application/pdf",
+        "Content-Disposition": `attachment; filename="${filename}"`,
+      },
+    });
+  }
 });
 
 app.all("/trpc/*", async (c) => {
