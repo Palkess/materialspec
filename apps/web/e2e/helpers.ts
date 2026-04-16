@@ -1,6 +1,6 @@
 import { hash } from "@node-rs/argon2";
 
-const API_URL = process.env.E2E_API_URL || "http://localhost:3002";
+const API_URL = process.env.E2E_API_URL || "http://localhost:3001";
 
 const argon2Options = {
   memoryCost: 19456,

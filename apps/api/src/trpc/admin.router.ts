@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { TRPCError } from "@trpc/server";
 import { randomBytes, createHash } from "node:crypto";
 import { eq, and, isNull, sql } from "drizzle-orm";
 import { router, adminProcedure } from "./trpc.js";
@@ -100,12 +101,26 @@ export const adminRouter = router({
         })
       )
       .mutation(async ({ input }) => {
+        // Validate target user exists before touching any specs
+        const [targetUser] = await db
+          .select({ id: users.id })
+          .from(users)
+          .where(eq(users.id, input.newOwnerId))
+          .limit(1);
+
+        if (!targetUser) {
+          throw new TRPCError({
+            code: "NOT_FOUND",
+            message: "errors.admin.targetUserNotFound",
+          });
+        }
+
         let count = 0;
         for (const specId of input.specIds) {
-          const result = await db
+          await db
             .update(specifications)
             .set({ userId: input.newOwnerId })
-            .where(eq(specifications.id, specId));
+            .where(and(eq(specifications.id, specId), isNull(specifications.deletedAt)));
           count++;
         }
         return { count };

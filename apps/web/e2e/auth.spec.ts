@@ -63,4 +63,22 @@ test.describe("Authentication", () => {
     await page.goto("/en/login");
     await expect(page.locator("h1")).toContainText("Log in");
   });
+
+  test("logout redirects to login", async ({ page }) => {
+    // Sign up first
+    const email = `logout-${Date.now()}@example.com`;
+    await page.goto("/sv/signup");
+    await page.fill('input[autocomplete="name"]', "Logout Tester");
+    await page.fill('input[type="email"]', email);
+    await page.fill('input[type="password"]', "password123");
+    await page.click('button[type="submit"]');
+    await page.waitForURL("**/sv/specs**", { timeout: 10000 });
+
+    // Go to account page and log out
+    await page.goto("/sv/account");
+    await page.waitForTimeout(1000);
+    await page.locator('button:has-text("Logga ut")').click();
+    await page.waitForURL(/\/sv\/login/, { timeout: 5000 });
+    await expect(page).toHaveURL(/\/sv\/login/);
+  });
 });

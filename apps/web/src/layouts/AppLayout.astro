@@ -1,6 +1,7 @@
 ---
 import svCommon from "../../../../packages/shared/i18n/sv/common.json";
 import enCommon from "../../../../packages/shared/i18n/en/common.json";
+import AdminNavLink from "../components/AdminNavLink";
 
 interface Props {
   title: string;
@@ -29,6 +30,7 @@ const t = lang === "sv" ? svCommon : enCommon;
           <a href={`/${lang}/specs`} class="text-sm px-3 py-2 rounded text-neutral-200 hover:bg-concrete-800 hover:text-white font-bold uppercase tracking-wide transition-colors">
             {t.specs}
           </a>
+          <AdminNavLink lang={lang} client:load />
         </nav>
       </div>
       <div class="flex items-center gap-2">
