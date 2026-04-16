@@ -1,10 +1,11 @@
 import { z } from "zod";
+import { createHash } from "node:crypto";
 import { hash, verify } from "@node-rs/argon2";
-import { eq } from "drizzle-orm";
+import { eq, and, isNull, gt } from "drizzle-orm";
 import { router, publicProcedure, protectedProcedure } from "./trpc.js";
 import { lucia } from "../auth/lucia.js";
 import { db } from "../db/index.js";
-import { users } from "../db/schema.js";
+import { users, passwordResetTokens } from "../db/schema.js";
 
 const argon2Options = {
   memoryCost: 19456,
@@ -142,5 +143,50 @@ export const authRouter = router({
         .where(eq(users.id, ctx.user.id));
 
       return { success: true };
+    }),
+
+  consumeResetToken: publicProcedure
+    .input(
+      z.object({
+        token: z.string().min(1),
+        newPassword: z.string().min(8).max(128),
+      })
+    )
+    .mutation(async ({ input }) => {
+      const hashedToken = createHash("sha256")
+        .update(input.token)
+        .digest("hex");
+
+      return db.transaction(async (tx) => {
+        const [tokenRecord] = await tx
+          .select()
+          .from(passwordResetTokens)
+          .where(
+            and(
+              eq(passwordResetTokens.hashedToken, hashedToken),
+              isNull(passwordResetTokens.usedAt),
+              gt(passwordResetTokens.expiresAt, new Date())
+            )
+          )
+          .limit(1);
+
+        if (!tokenRecord) {
+          throw new Error("errors.auth.invalidResetToken");
+        }
+
+        const newHash = await hash(input.newPassword, argon2Options);
+
+        await tx
+          .update(users)
+          .set({ passwordHash: newHash })
+          .where(eq(users.id, tokenRecord.userId));
+
+        await tx
+          .update(passwordResetTokens)
+          .set({ usedAt: new Date() })
+          .where(eq(passwordResetTokens.id, tokenRecord.id));
+
+        return { success: true };
+      });
     }),
 });
