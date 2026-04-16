@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo } from "react";
 import { I18nextProvider, useTranslation } from "react-i18next";
 import { trpc } from "../lib/trpc";
 import { createI18n } from "../lib/i18n";
+import { useAuthGuard } from "../lib/useAuthGuard";
 
 interface Spec {
   id: string;
@@ -46,6 +47,7 @@ function getApiUrl(): string {
 function SpecListInner({ lang }: Props) {
   const { t } = useTranslation("specs");
   const { t: tCommon } = useTranslation("common");
+  const { user, checking } = useAuthGuard(lang);
   const [specs, setSpecs] = useState<Spec[]>([]);
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
@@ -55,16 +57,16 @@ function SpecListInner({ lang }: Props) {
     try {
       const data = await trpc.specs.list.query();
       setSpecs(data);
-    } catch {
-      window.location.href = `/${lang}/login`;
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    loadSpecs();
-  }, []);
+    if (user) {
+      loadSpecs();
+    }
+  }, [user]);
 
   const filtered = useMemo(() => {
     if (!search.trim()) return specs;
@@ -83,7 +85,7 @@ function SpecListInner({ lang }: Props) {
     setSpecs((prev) => prev.filter((s) => s.id !== id));
   };
 
-  if (loading) {
+  if (checking || loading) {
     return <div className="text-neutral-400 text-center py-12">{tCommon("loading")}</div>;
   }
 

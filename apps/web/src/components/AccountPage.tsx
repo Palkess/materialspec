@@ -1,10 +1,11 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { I18nextProvider, useTranslation } from "react-i18next";
 import { trpc } from "../lib/trpc";
 import { createI18n } from "../lib/i18n";
+import { useAuthGuard } from "../lib/useAuthGuard";
 
 interface Props {
   lang: "sv" | "en";
@@ -26,11 +27,7 @@ type ChangePasswordInput = z.infer<typeof changePasswordSchema>;
 function AccountPageInner({ lang }: Props) {
   const { t } = useTranslation("common");
   const { t: tAuth } = useTranslation("auth");
-  const [user, setUser] = useState<{
-    name: string;
-    email: string;
-    locale: string;
-  } | null>(null);
+  const { user, checking } = useAuthGuard(lang);
   const [saving, setSaving] = useState(false);
   const [pwError, setPwError] = useState("");
   const [pwSuccess, setPwSuccess] = useState(false);
@@ -43,15 +40,6 @@ function AccountPageInner({ lang }: Props) {
   } = useForm<ChangePasswordInput>({
     resolver: zodResolver(changePasswordSchema),
   });
-
-  useEffect(() => {
-    trpc.auth.me
-      .query()
-      .then((data) => setUser(data))
-      .catch(() => {
-        window.location.href = `/${lang}/login`;
-      });
-  }, [lang]);
 
   const switchLocale = async (newLocale: "sv" | "en") => {
     setSaving(true);
@@ -88,7 +76,7 @@ function AccountPageInner({ lang }: Props) {
     }
   };
 
-  if (!user) {
+  if (checking || !user) {
     return <div className="text-neutral-400">{t("loading")}</div>;
   }
 

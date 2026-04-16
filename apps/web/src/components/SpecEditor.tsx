@@ -19,6 +19,7 @@ import {
 import { specUpdateSchema } from "@materialspec/shared";
 import { trpc } from "../lib/trpc";
 import { createI18n } from "../lib/i18n";
+import { useAuthGuard } from "../lib/useAuthGuard";
 import SpecHeader from "./SpecHeader";
 import ItemRow from "./ItemRow";
 import TotalsFooter from "./TotalsFooter";
@@ -64,10 +65,10 @@ function getApiUrl(): string {
 function SpecEditorInner({ lang, specId, userName }: Props) {
   const { t } = useTranslation("specs");
   const { t: tCommon } = useTranslation("common");
+  const { user: authUser, checking } = useAuthGuard(lang);
   const apiUrl = getApiUrl();
   const [saving, setSaving] = useState(false);
   const [savedId, setSavedId] = useState(specId);
-  const [user, setUser] = useState<{ name: string } | null>(null);
 
   const nameRefs = useRef<Map<number, HTMLInputElement | null>>(new Map());
   const priceRefs = useRef<Map<number, HTMLInputElement | null>>(new Map());
@@ -96,19 +97,12 @@ function SpecEditorInner({ lang, specId, userName }: Props) {
 
   const watchedItems = useWatch({ control, name: "items" }) || [];
 
-  // Load user name for pre-filling
+  // Pre-fill responsible person from authenticated user
   useEffect(() => {
-    if (!userName) {
-      trpc.auth.me.query().then((data) => {
-        setUser(data);
-        if (!specId) {
-          setValue("responsiblePerson", data.name);
-        }
-      }).catch(() => {
-        window.location.href = `/${lang}/login`;
-      });
+    if (!userName && authUser && !specId) {
+      setValue("responsiblePerson", authUser.name);
     }
-  }, [userName, specId, lang, setValue]);
+  }, [userName, authUser, specId, setValue]);
 
   // Load existing spec
   useEffect(() => {
@@ -211,6 +205,10 @@ function SpecEditorInner({ lang, specId, userName }: Props) {
       setSaving(false);
     }
   };
+
+  if (checking) {
+    return <div className="text-neutral-400 text-center py-12">{tCommon("loading")}</div>;
+  }
 
   return (
     <div className="w-full max-w-6xl mx-auto px-4 py-8">

@@ -16,6 +16,7 @@
   "actions": "Actions",
   "unsavedChanges": "You have unsaved changes",
   "unsavedChangesConfirm": "Are you sure you want to leave? Unsaved changes will be lost.",
+  "switchLanguage": "Svenska",
   "switchToEnglish": "English",
   "switchToSwedish": "Svenska",
   "logout": "Log out",

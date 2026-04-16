@@ -23,7 +23,7 @@ COPY --from=deps /app/node_modules ./node_modules
 COPY --from=deps /app/apps/api/node_modules ./apps/api/node_modules
 COPY --from=deps /app/packages/shared ./packages/shared
 COPY --from=build /app/apps/api/dist ./apps/api/dist
-COPY apps/api/drizzle apps/api/drizzle
+COPY --from=build /app/apps/api/drizzle ./apps/api/drizzle
 COPY apps/api/package.json apps/api/package.json
 COPY package.json ./
 EXPOSE 3001

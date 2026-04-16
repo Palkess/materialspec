@@ -16,6 +16,7 @@
   "actions": "Åtgärder",
   "unsavedChanges": "Du har osparade ändringar",
   "unsavedChangesConfirm": "Vill du verkligen lämna sidan? Osparade ändringar går förlorade.",
+  "switchLanguage": "English",
   "switchToEnglish": "English",
   "switchToSwedish": "Svenska",
   "logout": "Logga ut",

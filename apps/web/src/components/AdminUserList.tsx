@@ -128,7 +128,7 @@ function AdminUserListInner({ lang }: Props) {
     }
   };
 
-  if (loading) {
+  if (checking || loading) {
     return <div className="text-neutral-400 text-center py-12">{tCommon("loading")}</div>;
   }
 

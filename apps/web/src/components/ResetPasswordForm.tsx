@@ -23,33 +23,8 @@ const schema = z
 
 type FormValues = z.infer<typeof schema>;
 
-const t_reset = {
-  sv: {
-    title: "Återställ lösenord",
-    newPassword: "Nytt lösenord",
-    confirmPassword: "Bekräfta lösenord",
-    submit: "Återställ lösenord",
-    hint: "Minst 8 tecken",
-    success: "Lösenordet har återställts. Du kan nu logga in.",
-    error: "Länken är ogiltig eller har gått ut.",
-    mismatch: "Lösenorden matchar inte",
-    login: "Gå till inloggning",
-  },
-  en: {
-    title: "Reset password",
-    newPassword: "New password",
-    confirmPassword: "Confirm password",
-    submit: "Reset password",
-    hint: "At least 8 characters",
-    success: "Password has been reset. You can now log in.",
-    error: "This link is invalid or has expired.",
-    mismatch: "Passwords don't match",
-    login: "Go to login",
-  },
-};
-
 function ResetPasswordFormInner({ lang, token }: Props) {
-  const labels = t_reset[lang];
+  const { t } = useTranslation("auth");
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -70,7 +45,7 @@ function ResetPasswordFormInner({ lang, token }: Props) {
       });
       setSuccess(true);
     } catch {
-      setError(labels.error);
+      setError(t("resetPassword.error"));
     } finally {
       setLoading(false);
     }
@@ -80,13 +55,13 @@ function ResetPasswordFormInner({ lang, token }: Props) {
     return (
       <div className="w-full max-w-md mx-auto bg-concrete-900 border border-concrete-800 rounded-lg p-8 text-center">
         <div className="bg-green-900/50 border-l-4 border-green-500 text-green-200 px-4 py-3 rounded mb-6 font-bold text-sm">
-          {labels.success}
+          {t("resetPassword.success")}
         </div>
         <a
           href={`/${lang}/login`}
           className="min-h-btn inline-flex items-center bg-safety-500 hover:bg-safety-400 text-concrete-950 font-bold py-2 px-6 rounded transition-colors uppercase tracking-wide text-sm"
         >
-          {labels.login}
+          {t("resetPassword.login")}
         </a>
       </div>
     );
@@ -95,7 +70,7 @@ function ResetPasswordFormInner({ lang, token }: Props) {
   return (
     <div className="w-full max-w-md mx-auto bg-concrete-900 border border-concrete-800 rounded-lg p-8">
       <h1 className="text-3xl font-bold text-white mb-8 tracking-tight">
-        {labels.title}
+        {t("resetPassword.title")}
       </h1>
 
       {error && (
@@ -107,7 +82,7 @@ function ResetPasswordFormInner({ lang, token }: Props) {
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
         <div>
           <label className="block font-bold text-neutral-200 mb-2 uppercase text-sm tracking-wide">
-            {labels.newPassword}
+            {t("resetPassword.newPassword")}
           </label>
           <input
             type="password"
@@ -115,7 +90,7 @@ function ResetPasswordFormInner({ lang, token }: Props) {
             {...register("newPassword")}
             className="w-full px-4 py-3 bg-concrete-800 border border-concrete-600 rounded text-white focus:outline-none focus:border-safety-500 focus:ring-1 focus:ring-safety-500 transition-colors"
           />
-          <p className="text-neutral-500 text-xs mt-1">{labels.hint}</p>
+          <p className="text-neutral-500 text-xs mt-1">{t("resetPassword.hint")}</p>
           {errors.newPassword && (
             <p className="text-red-400 text-sm mt-1 font-bold">
               {errors.newPassword.message}
@@ -125,7 +100,7 @@ function ResetPasswordFormInner({ lang, token }: Props) {
 
         <div>
           <label className="block font-bold text-neutral-200 mb-2 uppercase text-sm tracking-wide">
-            {labels.confirmPassword}
+            {t("resetPassword.confirmPassword")}
           </label>
           <input
             type="password"
@@ -135,7 +110,7 @@ function ResetPasswordFormInner({ lang, token }: Props) {
           />
           {errors.confirmPassword && (
             <p className="text-red-400 text-sm mt-1 font-bold">
-              {labels.mismatch}
+              {t("resetPassword.mismatch")}
             </p>
           )}
         </div>
@@ -145,7 +120,7 @@ function ResetPasswordFormInner({ lang, token }: Props) {
           disabled={loading}
           className="w-full min-h-btn bg-safety-500 hover:bg-safety-400 text-concrete-950 font-bold text-lg py-3 px-6 rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed uppercase tracking-wide"
         >
-          {loading ? "..." : labels.submit}
+          {loading ? "..." : t("resetPassword.submit")}
         </button>
       </form>
     </div>
