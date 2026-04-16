@@ -1,0 +1,16 @@
+services:
+  api:
+    build:
+      target: dev
+    volumes:
+      - ./apps/api/src:/app/apps/api/src
+      - ./packages/shared/src:/app/packages/shared/src
+
+  web:
+    build:
+      target: dev
+    volumes:
+      - ./apps/web/src:/app/apps/web/src
+      - ./apps/web/astro.config.mjs:/app/apps/web/astro.config.mjs
+      - ./apps/web/tailwind.config.mjs:/app/apps/web/tailwind.config.mjs
+      - ./packages/shared/src:/app/packages/shared/src

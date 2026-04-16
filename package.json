@@ -1,0 +1,17 @@
+{
+  "name": "materialspec",
+  "private": true,
+  "workspaces": [
+    "apps/api",
+    "apps/web",
+    "packages/shared"
+  ],
+  "scripts": {
+    "dev": "docker compose -f docker-compose.yml -f docker-compose.dev.yml --profile dev up --build",
+    "build": "npm run build --workspaces",
+    "typecheck": "tsc --build"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

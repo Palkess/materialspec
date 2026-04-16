@@ -1,0 +1,10 @@
+{
+  "extends": "astro/tsconfigs/strict",
+  "compilerOptions": {
+    "jsx": "react-jsx",
+    "paths": {
+      "@materialspec/shared": ["../../packages/shared/src"]
+    }
+  },
+  "include": ["src", "astro.config.mjs"]
+}

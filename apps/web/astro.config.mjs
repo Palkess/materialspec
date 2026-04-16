@@ -1,0 +1,19 @@
+import { defineConfig } from "astro/config";
+import react from "@astrojs/react";
+import tailwind from "@astrojs/tailwind";
+
+export default defineConfig({
+  integrations: [react(), tailwind()],
+  i18n: {
+    defaultLocale: "sv",
+    locales: ["sv", "en"],
+    routing: {
+      prefixDefaultLocale: true,
+      redirectToDefaultLocale: true,
+    },
+  },
+  server: {
+    port: 4321,
+    host: "0.0.0.0",
+  },
+});
