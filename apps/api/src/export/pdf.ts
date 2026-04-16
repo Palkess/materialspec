@@ -142,7 +142,7 @@ export async function renderPdf(
     doc.fontSize(9).font("Helvetica");
     for (const group of totals.groups) {
       const label = t.totals.vatGroup.replace("{{rate}}", group.ratePercent);
-      const value = `${fmtCurrency(roundForDisplay(group.net), lang)} + ${fmtCurrency(roundForDisplay(group.tax), lang)}`;
+      const value = fmtCurrency(roundForDisplay(group.tax), lang);
       totalsRow(label, value);
     }
 
