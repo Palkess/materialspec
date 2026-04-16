@@ -15,14 +15,14 @@ const currentPath = Astro.url.pathname.replace(`/${lang}/`, `/${otherLang}/`);
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>{title} — Materialspec</title>
   </head>
-  <body class="min-h-screen bg-concrete-950 text-white">
-    <header class="border-b border-concrete-800 px-6 py-4 flex items-center justify-between">
-      <a href={`/${lang}/`} class="text-xl font-bold text-safety-500">
+  <body class="min-h-screen bg-concrete-950 text-neutral-100 font-sans">
+    <header class="border-b border-concrete-800 bg-concrete-900 px-6 py-4 flex items-center justify-between">
+      <a href={`/${lang}/`} class="text-xl font-bold tracking-tight text-safety-500 uppercase">
         Materialspec
       </a>
       <a
         href={currentPath}
-        class="text-sm text-gray-400 hover:text-white font-bold uppercase"
+        class="min-h-btn inline-flex items-center px-4 py-2 rounded bg-concrete-800 text-sm text-neutral-200 hover:bg-concrete-700 hover:text-white font-bold uppercase tracking-wide transition-colors"
       >
         {otherLang === "sv" ? "Svenska" : "English"}
       </a>

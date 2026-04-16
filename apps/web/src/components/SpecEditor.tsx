@@ -53,9 +53,18 @@ const emptyItem = () => ({
   taxRate: "0.25",
 });
 
+function getApiUrl(): string {
+  return (
+    (typeof window !== "undefined" &&
+      (window as unknown as { __API_URL__?: string }).__API_URL__) ||
+    "http://localhost:3002"
+  );
+}
+
 function SpecEditorInner({ lang, specId, userName }: Props) {
   const { t } = useTranslation("specs");
   const { t: tCommon } = useTranslation("common");
+  const apiUrl = getApiUrl();
   const [saving, setSaving] = useState(false);
   const [savedId, setSavedId] = useState(specId);
   const [user, setUser] = useState<{ name: string } | null>(null);
@@ -207,26 +216,45 @@ function SpecEditorInner({ lang, specId, userName }: Props) {
     <div className="w-full max-w-6xl mx-auto px-4 py-8">
       <form onSubmit={handleSubmit(onSave)} className="space-y-6">
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-4">
             <a
               href={`/${lang}/specs`}
-              className="text-neutral-400 hover:text-white transition-colors font-bold"
+              className="min-h-btn inline-flex items-center px-4 py-2 bg-concrete-900 border border-concrete-800 rounded text-neutral-300 hover:text-white hover:bg-concrete-800 transition-colors font-bold text-sm uppercase tracking-wide"
             >
               &larr; {tCommon("back")}
             </a>
             {isDirty && (
-              <span className="text-safety-500 text-sm font-bold animate-pulse">
+              <span className="inline-flex items-center gap-2 text-safety-500 text-sm font-bold">
+                <span className="w-2 h-2 rounded-full bg-safety-500 animate-pulse" />
                 {tCommon("unsavedChanges")}
               </span>
             )}
           </div>
-          <button
-            type="submit"
-            disabled={saving}
-            className="min-h-btn bg-safety-500 hover:bg-safety-400 text-concrete-950 font-bold py-2 px-8 rounded transition-colors disabled:opacity-50 uppercase tracking-wide text-sm"
-          >
-            {saving ? "..." : tCommon("save")}
-          </button>
+          <div className="flex items-center gap-2">
+            {savedId && (
+              <>
+                <a
+                  href={`${apiUrl}/specs/${savedId}/export.xlsx?lang=${lang}`}
+                  className="min-h-btn inline-flex items-center px-4 py-2 bg-concrete-800 border border-concrete-700 hover:bg-concrete-700 text-neutral-200 rounded font-bold text-sm uppercase tracking-wide transition-colors"
+                >
+                  {t("editor.exportXlsx")}
+                </a>
+                <a
+                  href={`${apiUrl}/specs/${savedId}/export.pdf?lang=${lang}`}
+                  className="min-h-btn inline-flex items-center px-4 py-2 bg-concrete-800 border border-concrete-700 hover:bg-concrete-700 text-neutral-200 rounded font-bold text-sm uppercase tracking-wide transition-colors"
+                >
+                  {t("editor.exportPdf")}
+                </a>
+              </>
+            )}
+            <button
+              type="submit"
+              disabled={saving}
+              className="min-h-btn bg-safety-500 hover:bg-safety-400 text-concrete-950 font-bold py-3 px-8 rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed uppercase tracking-wide text-sm"
+            >
+              {saving ? "..." : tCommon("save")}
+            </button>
+          </div>
         </div>
 
         <SpecHeader register={register} errors={errors} />
@@ -303,11 +331,11 @@ function SpecEditorInner({ lang, specId, userName }: Props) {
             </DndContext>
           </table>
 
-          <div className="p-4 border-t border-concrete-800">
+          <div className="px-4 py-3 border-t border-concrete-800">
             <button
               type="button"
               onClick={handleAppendRow}
-              className="text-sm text-safety-500 hover:text-safety-400 font-bold transition-colors"
+              className="inline-flex items-center gap-1 text-sm text-safety-500 hover:text-safety-400 font-bold uppercase tracking-wide transition-colors py-2"
             >
               + {t("editor.addRow")}
             </button>
@@ -320,7 +348,7 @@ function SpecEditorInner({ lang, specId, userName }: Props) {
           <button
             type="submit"
             disabled={saving}
-            className="min-h-btn bg-safety-500 hover:bg-safety-400 text-concrete-950 font-bold py-2 px-8 rounded transition-colors disabled:opacity-50 uppercase tracking-wide text-sm"
+            className="min-h-btn bg-safety-500 hover:bg-safety-400 text-concrete-950 font-bold py-3 px-8 rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed uppercase tracking-wide text-sm"
           >
             {saving ? "..." : tCommon("save")}
           </button>

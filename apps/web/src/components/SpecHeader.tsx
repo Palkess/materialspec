@@ -17,7 +17,7 @@ export default function SpecHeader({ register, errors }: Props) {
   const { t } = useTranslation("specs");
 
   return (
-    <div className="bg-concrete-900 border border-concrete-800 rounded-lg p-6 space-y-4">
+    <div className="bg-concrete-900 border border-concrete-800 rounded-lg p-6 space-y-5">
       <div>
         <label
           htmlFor="spec-name"

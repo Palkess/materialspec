@@ -35,7 +35,7 @@ export default function TotalsFooter({ items, lang }: Props) {
         {totals.groups.map((group) => (
           <div
             key={group.rate}
-            className="flex justify-between text-sm text-neutral-300"
+            className="flex justify-between text-sm text-neutral-400"
           >
             <span>
               {t("editor.totals.vatGroup", { rate: group.ratePercent })}
@@ -49,14 +49,14 @@ export default function TotalsFooter({ items, lang }: Props) {
 
         <hr className="border-concrete-700 my-3" />
 
-        <div className="flex justify-between text-sm text-neutral-300">
+        <div className="flex justify-between text-sm text-neutral-200">
           <span className="font-bold">{t("editor.totals.subtotal")}</span>
           <span className="font-mono font-bold">
             {formatMoney(roundForDisplay(totals.net), lang)}
           </span>
         </div>
 
-        <div className="flex justify-between text-sm text-neutral-300">
+        <div className="flex justify-between text-sm text-neutral-200">
           <span className="font-bold">{t("editor.totals.vat")}</span>
           <span className="font-mono font-bold">
             {formatMoney(roundForDisplay(totals.tax), lang)}
@@ -65,9 +65,9 @@ export default function TotalsFooter({ items, lang }: Props) {
 
         <hr className="border-concrete-700 my-3" />
 
-        <div className="flex justify-between text-lg text-white">
-          <span className="font-bold">{t("editor.totals.grandTotal")}</span>
-          <span className="font-mono font-bold text-safety-500">
+        <div className="flex justify-between text-lg text-white bg-concrete-800 -mx-6 px-6 py-3 rounded-b-lg">
+          <span className="font-bold uppercase tracking-wide">{t("editor.totals.grandTotal")}</span>
+          <span className="font-mono font-bold text-safety-500 text-xl">
             {formatMoney(roundForDisplay(totals.gross), lang)}
           </span>
         </div>

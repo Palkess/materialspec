@@ -35,12 +35,21 @@ function formatDate(date: Date | string, lang: "sv" | "en"): string {
   });
 }
 
+function getApiUrl(): string {
+  return (
+    (typeof window !== "undefined" &&
+      (window as unknown as { __API_URL__?: string }).__API_URL__) ||
+    "http://localhost:3002"
+  );
+}
+
 function SpecListInner({ lang }: Props) {
   const { t } = useTranslation("specs");
   const { t: tCommon } = useTranslation("common");
   const [specs, setSpecs] = useState<Spec[]>([]);
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
+  const apiUrl = getApiUrl();
 
   const loadSpecs = async () => {
     try {
@@ -86,7 +95,7 @@ function SpecListInner({ lang }: Props) {
         </h1>
         <a
           href={`/${lang}/specs/new`}
-          className="min-h-btn inline-flex items-center bg-safety-500 hover:bg-safety-400 text-concrete-950 font-bold py-2 px-6 rounded transition-colors uppercase tracking-wide text-sm"
+          className="min-h-btn inline-flex items-center bg-safety-500 hover:bg-safety-400 text-concrete-950 font-bold py-3 px-6 rounded transition-colors uppercase tracking-wide text-sm"
         >
           + {t("list.newSpec")}
         </a>
@@ -94,22 +103,31 @@ function SpecListInner({ lang }: Props) {
 
       {specs.length > 0 && (
         <div className="mb-6">
+          <label className="block font-bold text-neutral-200 mb-2 uppercase text-xs tracking-wide">
+            {t("list.searchPlaceholder")}
+          </label>
           <input
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder={t("list.searchPlaceholder")}
-            className="w-full max-w-md px-4 py-3 bg-concrete-900 border border-concrete-700 rounded text-white placeholder-neutral-500 focus:outline-none focus:border-safety-500 focus:ring-1 focus:ring-safety-500 transition-colors"
+            placeholder="..."
+            className="w-full max-w-md px-4 py-3 bg-concrete-800 border border-concrete-600 rounded text-white placeholder-neutral-500 focus:outline-none focus:border-safety-500 focus:ring-1 focus:ring-safety-500 transition-colors"
           />
         </div>
       )}
 
       {specs.length === 0 ? (
-        <div className="text-center py-16 bg-concrete-900 border border-concrete-800 rounded-lg">
-          <p className="text-neutral-300 text-lg font-bold mb-2">
+        <div className="text-center py-20 bg-concrete-900 border border-concrete-800 rounded-lg">
+          <p className="text-neutral-200 text-xl font-bold mb-3">
             {t("list.empty")}
           </p>
-          <p className="text-neutral-500">{t("list.emptyHint")}</p>
+          <p className="text-neutral-500 mb-8">{t("list.emptyHint")}</p>
+          <a
+            href={`/${lang}/specs/new`}
+            className="min-h-btn inline-flex items-center bg-safety-500 hover:bg-safety-400 text-concrete-950 font-bold py-3 px-8 rounded transition-colors uppercase tracking-wide"
+          >
+            + {t("list.newSpec")}
+          </a>
         </div>
       ) : filtered.length === 0 ? (
         <div className="text-center py-12 text-neutral-400">
@@ -144,11 +162,11 @@ function SpecListInner({ lang }: Props) {
               {filtered.map((spec, i) => (
                 <tr
                   key={spec.id}
-                  className={`border-b border-concrete-800 hover:bg-concrete-800/50 transition-colors ${
-                    i % 2 === 1 ? "bg-concrete-900/50" : ""
+                  className={`border-b border-concrete-800 hover:bg-concrete-700/30 transition-colors ${
+                    i % 2 === 1 ? "bg-concrete-800/40" : ""
                   }`}
                 >
-                  <td className="px-4 py-3">
+                  <td className="px-4 py-4">
                     <a
                       href={`/${lang}/specs/${spec.id}/edit`}
                       className="text-white font-bold hover:text-safety-400 transition-colors"
@@ -156,29 +174,41 @@ function SpecListInner({ lang }: Props) {
                       {spec.name}
                     </a>
                   </td>
-                  <td className="px-4 py-3 text-neutral-400 hidden md:table-cell">
-                    {spec.responsiblePerson || "—"}
+                  <td className="px-4 py-4 text-neutral-400 hidden md:table-cell">
+                    {spec.responsiblePerson || "\u2014"}
                   </td>
-                  <td className="px-4 py-3 text-neutral-400 text-sm hidden sm:table-cell">
+                  <td className="px-4 py-4 text-neutral-400 text-sm hidden sm:table-cell">
                     {formatDate(spec.updatedAt, lang)}
                   </td>
-                  <td className="px-4 py-3 text-right text-white font-mono">
+                  <td className="px-4 py-4 text-right text-white font-mono text-sm">
                     {formatCurrency(spec.grandTotal, lang)}
                   </td>
-                  <td className="px-4 py-3 text-right text-neutral-400">
+                  <td className="px-4 py-4 text-right text-neutral-400">
                     {spec.itemCount}
                   </td>
-                  <td className="px-4 py-3 text-right">
-                    <div className="flex gap-2 justify-end">
+                  <td className="px-4 py-4 text-right">
+                    <div className="flex gap-2 justify-end flex-wrap">
+                      <a
+                        href={`${apiUrl}/specs/${spec.id}/export.xlsx?lang=${lang}`}
+                        className="text-xs px-3 py-2 bg-concrete-800 hover:bg-concrete-700 text-neutral-200 rounded font-bold uppercase tracking-wide transition-colors"
+                      >
+                        {t("list.exportXlsx")}
+                      </a>
+                      <a
+                        href={`${apiUrl}/specs/${spec.id}/export.pdf?lang=${lang}`}
+                        className="text-xs px-3 py-2 bg-concrete-800 hover:bg-concrete-700 text-neutral-200 rounded font-bold uppercase tracking-wide transition-colors"
+                      >
+                        {t("list.exportPdf")}
+                      </a>
                       <button
                         onClick={() => handleDuplicate(spec.id)}
-                        className="text-xs px-3 py-1 bg-concrete-800 hover:bg-concrete-700 text-neutral-300 rounded font-bold transition-colors"
+                        className="text-xs px-3 py-2 bg-concrete-800 hover:bg-concrete-700 text-neutral-200 rounded font-bold uppercase tracking-wide transition-colors"
                       >
                         {t("list.duplicate")}
                       </button>
                       <button
                         onClick={() => handleDelete(spec.id)}
-                        className="text-xs px-3 py-1 bg-red-900/50 hover:bg-red-800/50 text-red-300 rounded font-bold transition-colors"
+                        className="text-xs px-3 py-2 bg-red-900/50 hover:bg-red-700/50 text-red-300 hover:text-red-200 rounded font-bold uppercase tracking-wide transition-colors"
                       >
                         {t("list.delete")}
                       </button>
