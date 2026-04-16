@@ -23,34 +23,9 @@ const changePasswordSchema = z
 
 type ChangePasswordInput = z.infer<typeof changePasswordSchema>;
 
-const t_pw = {
-  sv: {
-    title: "Byt lösenord",
-    currentPassword: "Nuvarande lösenord",
-    newPassword: "Nytt lösenord",
-    confirmPassword: "Bekräfta nytt lösenord",
-    submit: "Byt lösenord",
-    success: "Lösenordet har ändrats",
-    wrongPassword: "Nuvarande lösenord är felaktigt",
-    mismatch: "Lösenorden matchar inte",
-    hint: "Minst 8 tecken",
-  },
-  en: {
-    title: "Change password",
-    currentPassword: "Current password",
-    newPassword: "New password",
-    confirmPassword: "Confirm new password",
-    submit: "Change password",
-    success: "Password has been changed",
-    wrongPassword: "Current password is incorrect",
-    mismatch: "Passwords don't match",
-    hint: "At least 8 characters",
-  },
-};
-
 function AccountPageInner({ lang }: Props) {
   const { t } = useTranslation("common");
-  const labels = t_pw[lang];
+  const { t: tAuth } = useTranslation("auth");
   const [user, setUser] = useState<{
     name: string;
     email: string;
@@ -106,9 +81,9 @@ function AccountPageInner({ lang }: Props) {
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "";
       if (message.includes("invalidCredentials")) {
-        setPwError(labels.wrongPassword);
+        setPwError(tAuth("changePassword.wrongPassword"));
       } else {
-        setPwError(labels.wrongPassword);
+        setPwError(tAuth("changePassword.wrongPassword"));
       }
     }
   };
@@ -171,12 +146,12 @@ function AccountPageInner({ lang }: Props) {
         {/* Change password */}
         <div className="bg-concrete-900 border border-concrete-800 rounded-lg p-8">
           <h2 className="font-bold text-neutral-200 mb-4 uppercase text-sm tracking-wide">
-            {labels.title}
+            {tAuth("changePassword.title")}
           </h2>
 
           {pwSuccess && (
             <div className="bg-green-900/50 border-l-4 border-green-500 text-green-200 px-4 py-3 rounded mb-4 font-bold text-sm">
-              {labels.success}
+              {tAuth("changePassword.success")}
             </div>
           )}
 
@@ -188,11 +163,11 @@ function AccountPageInner({ lang }: Props) {
 
           <form
             onSubmit={handleSubmit(onChangePassword)}
-            className="space-y-4"
+            className="space-y-5"
           >
             <div>
-              <label className="block font-bold text-neutral-300 mb-1 text-sm">
-                {labels.currentPassword}
+              <label className="block font-bold text-neutral-200 mb-2 uppercase text-sm tracking-wide">
+                {tAuth("changePassword.currentPassword")}
               </label>
               <input
                 type="password"
@@ -208,8 +183,8 @@ function AccountPageInner({ lang }: Props) {
             </div>
 
             <div>
-              <label className="block font-bold text-neutral-300 mb-1 text-sm">
-                {labels.newPassword}
+              <label className="block font-bold text-neutral-200 mb-2 uppercase text-sm tracking-wide">
+                {tAuth("changePassword.newPassword")}
               </label>
               <input
                 type="password"
@@ -217,7 +192,7 @@ function AccountPageInner({ lang }: Props) {
                 {...register("newPassword")}
                 className="w-full px-4 py-3 bg-concrete-800 border border-concrete-600 rounded text-white focus:outline-none focus:border-safety-500 focus:ring-1 focus:ring-safety-500 transition-colors"
               />
-              <p className="text-neutral-500 text-xs mt-1">{labels.hint}</p>
+              <p className="text-neutral-500 text-xs mt-1">{tAuth("changePassword.hint")}</p>
               {errors.newPassword && (
                 <p className="text-red-400 text-sm mt-1 font-bold">
                   {errors.newPassword.message}
@@ -226,8 +201,8 @@ function AccountPageInner({ lang }: Props) {
             </div>
 
             <div>
-              <label className="block font-bold text-neutral-300 mb-1 text-sm">
-                {labels.confirmPassword}
+              <label className="block font-bold text-neutral-200 mb-2 uppercase text-sm tracking-wide">
+                {tAuth("changePassword.confirmPassword")}
               </label>
               <input
                 type="password"
@@ -237,16 +212,16 @@ function AccountPageInner({ lang }: Props) {
               />
               {errors.confirmPassword && (
                 <p className="text-red-400 text-sm mt-1 font-bold">
-                  {labels.mismatch}
+                  {tAuth("changePassword.mismatch")}
                 </p>
               )}
             </div>
 
             <button
               type="submit"
-              className="min-h-btn bg-concrete-700 hover:bg-concrete-600 text-white font-bold py-2 px-6 rounded transition-colors uppercase tracking-wide text-sm"
+              className="min-h-btn bg-safety-500 hover:bg-safety-400 text-concrete-950 font-bold py-3 px-6 rounded transition-colors uppercase tracking-wide text-sm"
             >
-              {labels.submit}
+              {tAuth("changePassword.submit")}
             </button>
           </form>
         </div>

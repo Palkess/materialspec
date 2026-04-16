@@ -14,7 +14,9 @@
     },
     "duplicate": "Duplicate",
     "delete": "Delete",
-    "deleteConfirm": "Are you sure you want to delete this specification?"
+    "deleteConfirm": "Are you sure you want to delete this specification?",
+    "exportXlsx": "Excel",
+    "exportPdf": "PDF"
   },
   "editor": {
     "name": "Name",
@@ -24,6 +26,7 @@
     "responsiblePerson": "Responsible person",
     "responsiblePersonPlaceholder": "Name of responsible person",
     "addRow": "Add row",
+    "deleteRow": "Delete row",
     "item": {
       "name": "Name",
       "description": "Description",
@@ -34,6 +37,9 @@
       "tax": "Tax",
       "total": "Total"
     },
+    "export": "Export",
+    "exportXlsx": "Export Excel",
+    "exportPdf": "Export PDF",
     "totals": {
       "title": "Summary",
       "vatGroup": "VAT group {{rate}}%",

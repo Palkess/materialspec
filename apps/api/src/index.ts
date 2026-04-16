@@ -69,7 +69,11 @@ app.get("/specs/:id/export.:ext", async (c) => {
     .where(eq(items.specificationId, id))
     .orderBy(items.sortOrder);
 
-  const lang = (user.locale as "sv" | "en") || "sv";
+  const queryLang = c.req.query("lang");
+  const lang: "sv" | "en" =
+    queryLang === "sv" || queryLang === "en"
+      ? queryLang
+      : ((user.locale as "sv" | "en") || "sv");
   const filename = `${spec.name.replace(/[^a-zA-Z0-9åäöÅÄÖ\- ]/g, "")}.${ext}`;
 
   if (ext === "xlsx") {

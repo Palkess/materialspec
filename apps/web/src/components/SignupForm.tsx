@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -23,6 +23,12 @@ function SignupFormInner({ lang }: Props) {
   const { t: tErrors } = useTranslation("errors");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    trpc.auth.me.query().then(() => {
+      window.location.href = `/${lang}/specs`;
+    }).catch(() => {/* not authenticated, stay on signup */});
+  }, [lang]);
 
   const {
     register,

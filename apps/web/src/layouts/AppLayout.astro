@@ -1,4 +1,7 @@
 ---
+import svCommon from "../../../../packages/shared/i18n/sv/common.json";
+import enCommon from "../../../../packages/shared/i18n/en/common.json";
+
 interface Props {
   title: string;
   lang: "sv" | "en";
@@ -7,6 +10,7 @@ interface Props {
 const { title, lang } = Astro.props;
 const otherLang = lang === "sv" ? "en" : "sv";
 const currentPath = Astro.url.pathname.replace(`/${lang}/`, `/${otherLang}/`);
+const t = lang === "sv" ? svCommon : enCommon;
 ---
 
 <html lang={lang}>
@@ -23,7 +27,7 @@ const currentPath = Astro.url.pathname.replace(`/${lang}/`, `/${otherLang}/`);
         </a>
         <nav class="hidden sm:flex items-center gap-1">
           <a href={`/${lang}/specs`} class="text-sm px-3 py-2 rounded text-neutral-200 hover:bg-concrete-800 hover:text-white font-bold uppercase tracking-wide transition-colors">
-            {lang === "sv" ? "Specifikationer" : "Specifications"}
+            {t.specs}
           </a>
         </nav>
       </div>
@@ -32,13 +36,13 @@ const currentPath = Astro.url.pathname.replace(`/${lang}/`, `/${otherLang}/`);
           href={currentPath}
           class="min-h-btn inline-flex items-center px-3 py-2 rounded bg-concrete-800 hover:bg-concrete-700 text-sm text-neutral-200 hover:text-white font-bold uppercase tracking-wide transition-colors"
         >
-          {otherLang === "sv" ? "Svenska" : "English"}
+          {lang === "sv" ? t.switchToEnglish : t.switchToSwedish}
         </a>
         <a
           href={`/${lang}/account`}
           class="min-h-btn inline-flex items-center px-4 py-2 bg-concrete-800 hover:bg-concrete-700 text-sm text-neutral-200 hover:text-white rounded font-bold uppercase tracking-wide transition-colors"
         >
-          {lang === "sv" ? "Konto" : "Account"}
+          {t.account}
         </a>
       </div>
     </header>

@@ -84,7 +84,7 @@ export async function renderXlsx(
       item.description,
       item.unit,
       fmtNum(item.quantity, lang),
-      fmtCurrency(roundForDisplay(line.net.div(item.quantity || "1")), lang),
+      fmtCurrency(roundForDisplay(item.pricePerUnit), lang),
       `${(parseFloat(item.taxRate) * 100).toFixed(0)} %`,
       fmtCurrency(roundForDisplay(line.tax), lang),
       fmtCurrency(roundForDisplay(line.gross), lang),

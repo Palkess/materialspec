@@ -14,7 +14,9 @@
     },
     "duplicate": "Duplicera",
     "delete": "Ta bort",
-    "deleteConfirm": "Vill du verkligen ta bort denna specifikation?"
+    "deleteConfirm": "Vill du verkligen ta bort denna specifikation?",
+    "exportXlsx": "Excel",
+    "exportPdf": "PDF"
   },
   "editor": {
     "name": "Namn",
@@ -24,6 +26,7 @@
     "responsiblePerson": "Ansvarig person",
     "responsiblePersonPlaceholder": "Namn på ansvarig",
     "addRow": "Lägg till rad",
+    "deleteRow": "Ta bort rad",
     "item": {
       "name": "Namn",
       "description": "Beskrivning",
@@ -34,6 +37,9 @@
       "tax": "Moms",
       "total": "Totalt"
     },
+    "export": "Exportera",
+    "exportXlsx": "Exportera Excel",
+    "exportPdf": "Exportera PDF",
     "totals": {
       "title": "Summering",
       "vatGroup": "Momsgrupp {{rate}}%",
