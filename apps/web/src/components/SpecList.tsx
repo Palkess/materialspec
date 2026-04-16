@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { I18nextProvider, useTranslation } from "react-i18next";
 import { trpc } from "../lib/trpc";
 import { createI18n } from "../lib/i18n";
@@ -59,7 +59,15 @@ function SpecListInner({ lang }: Props) {
   const [sortDir, setSortDir] = useState<SortDir>("desc");
   const [openMenu, setOpenMenu] = useState<string | null>(null);
   const [menuPos, setMenuPos] = useState({ top: 0, right: 0 });
+  const triggerRef = useRef<HTMLButtonElement | null>(null);
+  const popoverRef = useRef<HTMLDivElement | null>(null);
 
+  const closeMenu = () => {
+    setOpenMenu(null);
+    triggerRef.current?.focus();
+  };
+
+  // Close on outside click
   useEffect(() => {
     const handler = (e: MouseEvent) => {
       const target = e.target as HTMLElement;
@@ -71,11 +79,53 @@ function SpecListInner({ lang }: Props) {
     return () => document.removeEventListener("mousedown", handler);
   }, []);
 
+  // Focus first menu item when popover opens; Escape / keyboard nav
+  useEffect(() => {
+    if (!openMenu || !popoverRef.current) return;
+    const items = Array.from(
+      popoverRef.current.querySelectorAll<HTMLElement>("a[role='menuitem'], button[role='menuitem']")
+    );
+    items[0]?.focus();
+
+    const handleKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        e.preventDefault();
+        closeMenu();
+        return;
+      }
+      if (e.key === "ArrowDown") {
+        e.preventDefault();
+        const idx = items.indexOf(document.activeElement as HTMLElement);
+        items[(idx + 1) % items.length]?.focus();
+        return;
+      }
+      if (e.key === "ArrowUp") {
+        e.preventDefault();
+        const idx = items.indexOf(document.activeElement as HTMLElement);
+        items[(idx - 1 + items.length) % items.length]?.focus();
+        return;
+      }
+      if (e.key === "Tab") {
+        // Keep focus inside the menu: wrap instead of leaving
+        e.preventDefault();
+        const idx = items.indexOf(document.activeElement as HTMLElement);
+        if (e.shiftKey) {
+          items[(idx - 1 + items.length) % items.length]?.focus();
+        } else {
+          items[(idx + 1) % items.length]?.focus();
+        }
+      }
+    };
+    document.addEventListener("keydown", handleKey);
+    return () => document.removeEventListener("keydown", handleKey);
+  }, [openMenu]);
+
   const toggleMenu = (id: string, btn: HTMLButtonElement) => {
     if (openMenu === id) {
-      setOpenMenu(null);
+      closeMenu();
       return;
     }
+    triggerRef.current = btn;
     const rect = btn.getBoundingClientRect();
     setMenuPos({
       top: rect.bottom + window.scrollY + 4,
@@ -265,15 +315,17 @@ function SpecListInner({ lang }: Props) {
                   </td>
                   <td className="px-4 py-4 text-right">
                     <div className="flex gap-2 justify-end items-center">
-                      {/* Three-dot menu */}
+                      {/* Three-dot menu trigger */}
                       <div data-spec-menu={spec.id}>
                         <button
                           onClick={(e) => toggleMenu(spec.id, e.currentTarget)}
+                          aria-haspopup="menu"
+                          aria-expanded={openMenu === spec.id}
+                          aria-controls={openMenu === spec.id ? "spec-actions-menu" : undefined}
+                          aria-label={tCommon("actions")}
                           className="p-2 rounded text-neutral-400 hover:text-white hover:bg-concrete-700 transition-colors"
-                          aria-label="More actions"
-                          title="More actions"
                         >
-                          <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+                          <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
                             <circle cx="8" cy="2.5" r="1.5"/>
                             <circle cx="8" cy="8" r="1.5"/>
                             <circle cx="8" cy="13.5" r="1.5"/>
@@ -296,31 +348,38 @@ function SpecListInner({ lang }: Props) {
         </div>
       )}
 
-      {/* Fixed-position popover — rendered outside the overflow-hidden table */}
+      {/* Fixed-position popover — rendered outside overflow-hidden table */}
       {openMenu && (
         <div
+          id="spec-actions-menu"
+          role="menu"
+          aria-label={tCommon("actions")}
           data-spec-menu={openMenu}
+          ref={popoverRef}
           style={{ position: "fixed", top: menuPos.top, right: menuPos.right, zIndex: 50 }}
           className="w-44 bg-concrete-800 border border-concrete-600 rounded-lg shadow-xl overflow-hidden"
         >
           <a
+            role="menuitem"
             href={`${apiUrl}/specs/${openMenu}/export.xlsx?lang=${lang}`}
-            className="flex items-center px-4 py-2.5 text-sm text-neutral-200 hover:bg-concrete-700 hover:text-white transition-colors font-bold uppercase tracking-wide"
+            className="flex items-center px-4 py-2.5 text-sm text-neutral-200 hover:bg-concrete-700 hover:text-white transition-colors font-bold uppercase tracking-wide focus:outline-none focus:bg-concrete-700 focus:text-white"
             onClick={() => setOpenMenu(null)}
           >
             {t("list.exportXlsx")}
           </a>
           <a
+            role="menuitem"
             href={`${apiUrl}/specs/${openMenu}/export.pdf?lang=${lang}`}
-            className="flex items-center px-4 py-2.5 text-sm text-neutral-200 hover:bg-concrete-700 hover:text-white transition-colors font-bold uppercase tracking-wide"
+            className="flex items-center px-4 py-2.5 text-sm text-neutral-200 hover:bg-concrete-700 hover:text-white transition-colors font-bold uppercase tracking-wide focus:outline-none focus:bg-concrete-700 focus:text-white"
             onClick={() => setOpenMenu(null)}
           >
             {t("list.exportPdf")}
           </a>
-          <div className="border-t border-concrete-600" />
+          <div className="border-t border-concrete-600" role="separator" />
           <button
-            onClick={() => { setOpenMenu(null); handleDuplicate(openMenu); }}
-            className="w-full flex items-center px-4 py-2.5 text-sm text-neutral-200 hover:bg-concrete-700 hover:text-white transition-colors font-bold uppercase tracking-wide text-left"
+            role="menuitem"
+            onClick={() => { closeMenu(); handleDuplicate(openMenu); }}
+            className="w-full flex items-center px-4 py-2.5 text-sm text-neutral-200 hover:bg-concrete-700 hover:text-white transition-colors font-bold uppercase tracking-wide text-left focus:outline-none focus:bg-concrete-700 focus:text-white"
           >
             {t("list.duplicate")}
           </button>
