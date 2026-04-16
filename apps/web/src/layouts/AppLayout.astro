@@ -21,22 +21,22 @@ const currentPath = Astro.url.pathname.replace(`/${lang}/`, `/${otherLang}/`);
         <a href={`/${lang}/specs`} class="text-xl font-bold tracking-tight text-safety-500 uppercase">
           Materialspec
         </a>
-        <nav class="hidden sm:flex items-center gap-4">
-          <a href={`/${lang}/specs`} class="text-sm text-neutral-300 hover:text-white font-bold uppercase tracking-wide transition-colors">
+        <nav class="hidden sm:flex items-center gap-1">
+          <a href={`/${lang}/specs`} class="text-sm px-3 py-2 rounded text-neutral-200 hover:bg-concrete-800 hover:text-white font-bold uppercase tracking-wide transition-colors">
             {lang === "sv" ? "Specifikationer" : "Specifications"}
           </a>
         </nav>
       </div>
-      <div class="flex items-center gap-3">
+      <div class="flex items-center gap-2">
         <a
           href={currentPath}
-          class="text-xs text-neutral-400 hover:text-white font-bold uppercase tracking-wide transition-colors"
+          class="min-h-btn inline-flex items-center px-3 py-2 rounded bg-concrete-800 hover:bg-concrete-700 text-sm text-neutral-200 hover:text-white font-bold uppercase tracking-wide transition-colors"
         >
-          {otherLang === "sv" ? "SV" : "EN"}
+          {otherLang === "sv" ? "Svenska" : "English"}
         </a>
         <a
           href={`/${lang}/account`}
-          class="text-xs px-3 py-2 bg-concrete-800 hover:bg-concrete-700 text-neutral-200 rounded font-bold uppercase tracking-wide transition-colors"
+          class="min-h-btn inline-flex items-center px-4 py-2 bg-concrete-800 hover:bg-concrete-700 text-sm text-neutral-200 hover:text-white rounded font-bold uppercase tracking-wide transition-colors"
         >
           {lang === "sv" ? "Konto" : "Account"}
         </a>

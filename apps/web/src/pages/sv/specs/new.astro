@@ -1,10 +1,8 @@
 ---
 import AppLayout from "../../../layouts/AppLayout.astro";
+import SpecEditor from "../../../components/SpecEditor";
 ---
 
 <AppLayout title="Ny specifikation" lang="sv">
-  <div class="text-center py-16">
-    <h1 class="text-3xl font-bold text-white mb-4">Ny specifikation</h1>
-    <p class="text-neutral-400">Editorn byggs i en kommande uppgift.</p>
-  </div>
+  <SpecEditor lang="sv" client:load />
 </AppLayout>

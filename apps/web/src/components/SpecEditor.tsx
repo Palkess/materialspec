@@ -1,0 +1,340 @@
+import { useState, useEffect, useRef, useCallback } from "react";
+import { useForm, useFieldArray, useWatch } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { I18nextProvider, useTranslation } from "react-i18next";
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+} from "@dnd-kit/core";
+import type { DragEndEvent } from "@dnd-kit/core";
+import {
+  SortableContext,
+  sortableKeyboardCoordinates,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
+import { specUpdateSchema } from "@materialspec/shared";
+import { trpc } from "../lib/trpc";
+import { createI18n } from "../lib/i18n";
+import SpecHeader from "./SpecHeader";
+import ItemRow from "./ItemRow";
+import TotalsFooter from "./TotalsFooter";
+
+export interface SpecFormValues {
+  name: string;
+  description: string;
+  responsiblePerson: string;
+  items: Array<{
+    id?: string;
+    name: string;
+    description: string;
+    unit: string;
+    quantity: string;
+    pricePerUnit: string;
+    taxRate: string;
+  }>;
+}
+
+interface Props {
+  lang: "sv" | "en";
+  specId?: string;
+  userName?: string;
+}
+
+const emptyItem = () => ({
+  name: "",
+  description: "",
+  unit: "pcs",
+  quantity: "0",
+  pricePerUnit: "0",
+  taxRate: "0.25",
+});
+
+function SpecEditorInner({ lang, specId, userName }: Props) {
+  const { t } = useTranslation("specs");
+  const { t: tCommon } = useTranslation("common");
+  const [saving, setSaving] = useState(false);
+  const [savedId, setSavedId] = useState(specId);
+  const [user, setUser] = useState<{ name: string } | null>(null);
+
+  const nameRefs = useRef<Map<number, HTMLInputElement | null>>(new Map());
+  const priceRefs = useRef<Map<number, HTMLInputElement | null>>(new Map());
+
+  const {
+    register,
+    control,
+    handleSubmit,
+    setValue,
+    reset,
+    formState: { errors, isDirty },
+  } = useForm<SpecFormValues>({
+    resolver: zodResolver(specUpdateSchema),
+    defaultValues: {
+      name: "",
+      description: "",
+      responsiblePerson: userName || "",
+      items: [],
+    },
+  });
+
+  const { fields, append, remove, move } = useFieldArray({
+    control,
+    name: "items",
+  });
+
+  const watchedItems = useWatch({ control, name: "items" }) || [];
+
+  // Load user name for pre-filling
+  useEffect(() => {
+    if (!userName) {
+      trpc.auth.me.query().then((data) => {
+        setUser(data);
+        if (!specId) {
+          setValue("responsiblePerson", data.name);
+        }
+      }).catch(() => {
+        window.location.href = `/${lang}/login`;
+      });
+    }
+  }, [userName, specId, lang, setValue]);
+
+  // Load existing spec
+  useEffect(() => {
+    if (specId) {
+      trpc.specs.get.query({ id: specId }).then((data) => {
+        reset({
+          name: data.name,
+          description: data.description,
+          responsiblePerson: data.responsiblePerson,
+          items: data.items.map((item) => ({
+            name: item.name,
+            description: item.description,
+            unit: item.unit,
+            quantity: item.quantity,
+            pricePerUnit: item.pricePerUnit,
+            taxRate: item.taxRate,
+          })),
+        });
+      }).catch(() => {
+        window.location.href = `/${lang}/specs`;
+      });
+    }
+  }, [specId, reset, lang]);
+
+  // beforeunload guard
+  useEffect(() => {
+    const handler = (e: BeforeUnloadEvent) => {
+      if (isDirty) {
+        e.preventDefault();
+      }
+    };
+    window.addEventListener("beforeunload", handler);
+    return () => window.removeEventListener("beforeunload", handler);
+  }, [isDirty]);
+
+  const handleAppendRow = useCallback(() => {
+    const newIndex = fields.length;
+    append(emptyItem());
+    // Focus new row's name input after render
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        const el = nameRefs.current.get(newIndex);
+        if (el) el.focus();
+      });
+    });
+  }, [append, fields.length]);
+
+  const handleDragEnd = useCallback(
+    (event: DragEndEvent) => {
+      const { active, over } = event;
+      if (over && active.id !== over.id) {
+        const oldIndex = fields.findIndex((f) => f.id === active.id);
+        const newIndex = fields.findIndex((f) => f.id === over.id);
+        if (oldIndex !== -1 && newIndex !== -1) {
+          move(oldIndex, newIndex);
+        }
+      }
+    },
+    [fields, move]
+  );
+
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
+
+  const onSave = async (data: SpecFormValues) => {
+    setSaving(true);
+    try {
+      // Filter empty trailing rows
+      const filteredItems = data.items.filter(
+        (item) => item.name.trim() !== ""
+      );
+
+      if (savedId) {
+        await trpc.specs.update.mutate({
+          id: savedId,
+          name: data.name,
+          description: data.description,
+          responsiblePerson: data.responsiblePerson,
+          items: filteredItems,
+        });
+        reset(data);
+      } else {
+        const result = await trpc.specs.create.mutate({
+          name: data.name,
+          description: data.description,
+          responsiblePerson: data.responsiblePerson,
+          items: filteredItems,
+        });
+        setSavedId(result.id);
+        reset(data);
+        window.history.replaceState(null, "", `/${lang}/specs/${result.id}/edit`);
+      }
+    } catch (err) {
+      console.error("Save failed:", err);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div className="w-full max-w-6xl mx-auto px-4 py-8">
+      <form onSubmit={handleSubmit(onSave)} className="space-y-6">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <a
+              href={`/${lang}/specs`}
+              className="text-neutral-400 hover:text-white transition-colors font-bold"
+            >
+              &larr; {tCommon("back")}
+            </a>
+            {isDirty && (
+              <span className="text-safety-500 text-sm font-bold animate-pulse">
+                {tCommon("unsavedChanges")}
+              </span>
+            )}
+          </div>
+          <button
+            type="submit"
+            disabled={saving}
+            className="min-h-btn bg-safety-500 hover:bg-safety-400 text-concrete-950 font-bold py-2 px-8 rounded transition-colors disabled:opacity-50 uppercase tracking-wide text-sm"
+          >
+            {saving ? "..." : tCommon("save")}
+          </button>
+        </div>
+
+        <SpecHeader register={register} errors={errors} />
+
+        <div className="bg-concrete-900 border border-concrete-800 rounded-lg overflow-x-auto">
+          <table className="w-full min-w-[800px]">
+            <thead>
+              <tr className="border-b border-concrete-700">
+                <th className="px-2 py-3 w-8"></th>
+                <th className="px-1 py-3 text-left text-xs font-bold text-neutral-400 uppercase tracking-wider">
+                  {t("editor.item.name")}
+                </th>
+                <th className="px-1 py-3 text-left text-xs font-bold text-neutral-400 uppercase tracking-wider hidden lg:table-cell">
+                  {t("editor.item.description")}
+                </th>
+                <th className="px-1 py-3 text-left text-xs font-bold text-neutral-400 uppercase tracking-wider">
+                  {t("editor.item.vatRate")}
+                </th>
+                <th className="px-1 py-3 text-left text-xs font-bold text-neutral-400 uppercase tracking-wider">
+                  {t("editor.item.unit")}
+                </th>
+                <th className="px-1 py-3 text-right text-xs font-bold text-neutral-400 uppercase tracking-wider">
+                  {t("editor.item.quantity")}
+                </th>
+                <th className="px-1 py-3 text-right text-xs font-bold text-neutral-400 uppercase tracking-wider">
+                  {t("editor.item.pricePerUnit")}
+                </th>
+                <th className="px-2 py-3 text-right text-xs font-bold text-neutral-400 uppercase tracking-wider">
+                  {t("editor.item.tax")}
+                </th>
+                <th className="px-2 py-3 text-right text-xs font-bold text-neutral-400 uppercase tracking-wider">
+                  {t("editor.item.total")}
+                </th>
+                <th className="px-2 py-3 w-8"></th>
+              </tr>
+            </thead>
+            <DndContext
+              sensors={sensors}
+              collisionDetection={closestCenter}
+              onDragEnd={handleDragEnd}
+            >
+              <SortableContext
+                items={fields.map((f) => f.id)}
+                strategy={verticalListSortingStrategy}
+              >
+                <tbody>
+                  {fields.map((field, index) => (
+                    <ItemRow
+                      key={field.id}
+                      id={field.id}
+                      index={index}
+                      isLast={index === fields.length - 1}
+                      register={register}
+                      control={control}
+                      onRemove={() => remove(index)}
+                      onAppendRow={handleAppendRow}
+                      setValue={(name, value) =>
+                        setValue(name as `items.${number}.${string}`, value, {
+                          shouldDirty: true,
+                        })
+                      }
+                      lang={lang}
+                      nameInputRef={(el) => nameRefs.current.set(index, el)}
+                      priceInputRef={(el) => priceRefs.current.set(index, el)}
+                      nextRowNameRef={
+                        index < fields.length - 1
+                          ? () => nameRefs.current.get(index + 1) || null
+                          : null
+                      }
+                    />
+                  ))}
+                </tbody>
+              </SortableContext>
+            </DndContext>
+          </table>
+
+          <div className="p-4 border-t border-concrete-800">
+            <button
+              type="button"
+              onClick={handleAppendRow}
+              className="text-sm text-safety-500 hover:text-safety-400 font-bold transition-colors"
+            >
+              + {t("editor.addRow")}
+            </button>
+          </div>
+        </div>
+
+        <TotalsFooter items={watchedItems || []} lang={lang} />
+
+        <div className="flex justify-end">
+          <button
+            type="submit"
+            disabled={saving}
+            className="min-h-btn bg-safety-500 hover:bg-safety-400 text-concrete-950 font-bold py-2 px-8 rounded transition-colors disabled:opacity-50 uppercase tracking-wide text-sm"
+          >
+            {saving ? "..." : tCommon("save")}
+          </button>
+        </div>
+      </form>
+    </div>
+  );
+}
+
+export default function SpecEditor({ lang, specId, userName }: Props) {
+  const i18n = createI18n(lang);
+  return (
+    <I18nextProvider i18n={i18n}>
+      <SpecEditorInner lang={lang} specId={specId} userName={userName} />
+    </I18nextProvider>
+  );
+}
