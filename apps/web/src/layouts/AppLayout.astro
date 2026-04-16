@@ -1,0 +1,52 @@
+---
+interface Props {
+  title: string;
+  lang: "sv" | "en";
+}
+
+const { title, lang } = Astro.props;
+const otherLang = lang === "sv" ? "en" : "sv";
+const currentPath = Astro.url.pathname.replace(`/${lang}/`, `/${otherLang}/`);
+---
+
+<html lang={lang}>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title} — Materialspec</title>
+  </head>
+  <body class="min-h-screen bg-concrete-950 text-neutral-100 font-sans">
+    <header class="border-b border-concrete-800 bg-concrete-900 px-6 py-3 flex items-center justify-between">
+      <div class="flex items-center gap-6">
+        <a href={`/${lang}/specs`} class="text-xl font-bold tracking-tight text-safety-500 uppercase">
+          Materialspec
+        </a>
+        <nav class="hidden sm:flex items-center gap-4">
+          <a href={`/${lang}/specs`} class="text-sm text-neutral-300 hover:text-white font-bold uppercase tracking-wide transition-colors">
+            {lang === "sv" ? "Specifikationer" : "Specifications"}
+          </a>
+        </nav>
+      </div>
+      <div class="flex items-center gap-3">
+        <a
+          href={currentPath}
+          class="text-xs text-neutral-400 hover:text-white font-bold uppercase tracking-wide transition-colors"
+        >
+          {otherLang === "sv" ? "SV" : "EN"}
+        </a>
+        <a
+          href={`/${lang}/account`}
+          class="text-xs px-3 py-2 bg-concrete-800 hover:bg-concrete-700 text-neutral-200 rounded font-bold uppercase tracking-wide transition-colors"
+        >
+          {lang === "sv" ? "Konto" : "Account"}
+        </a>
+      </div>
+    </header>
+    <main>
+      <slot />
+    </main>
+    <script is:inline define:vars={{ apiUrl: import.meta.env.PUBLIC_API_URL || "http://localhost:3002" }}>
+      window.__API_URL__ = apiUrl;
+    </script>
+  </body>
+</html>

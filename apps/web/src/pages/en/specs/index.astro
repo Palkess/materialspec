@@ -1,10 +1,8 @@
 ---
-import AuthLayout from "../../../layouts/AuthLayout.astro";
+import AppLayout from "../../../layouts/AppLayout.astro";
+import SpecList from "../../../components/SpecList";
 ---
 
-<AuthLayout title="Specifications" lang="en">
-  <div class="text-center">
-    <h1 class="text-3xl font-bold text-white mb-4">Specifications</h1>
-    <p class="text-gray-400">Your specifications will appear here.</p>
-  </div>
-</AuthLayout>
+<AppLayout title="Specifications" lang="en">
+  <SpecList lang="en" client:load />
+</AppLayout>
