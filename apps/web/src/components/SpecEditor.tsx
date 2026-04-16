@@ -138,6 +138,25 @@ function SpecEditorInner({ lang, specId, userName }: Props) {
     return () => window.removeEventListener("beforeunload", handler);
   }, [isDirty]);
 
+  // In-app navigation guard — intercept clicks on <a> tags outside this form
+  useEffect(() => {
+    if (!isDirty) return;
+    const handler = (e: MouseEvent) => {
+      const anchor = (e.target as HTMLElement).closest("a[href]");
+      if (!anchor) return;
+      const href = anchor.getAttribute("href");
+      if (!href || href.startsWith("#") || href.startsWith("javascript:")) return;
+      // Allow export links (they open downloads, don't navigate away)
+      if (href.includes("/export.")) return;
+      e.preventDefault();
+      if (window.confirm(tCommon("unsavedChangesConfirm"))) {
+        window.location.href = href;
+      }
+    };
+    document.addEventListener("click", handler, true);
+    return () => document.removeEventListener("click", handler, true);
+  }, [isDirty, tCommon]);
+
   const handleAppendRow = useCallback(() => {
     const newIndex = fields.length;
     append(emptyItem());
