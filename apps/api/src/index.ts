@@ -28,25 +28,17 @@ app.get("/health", (c) => {
 });
 
 // Export routes (plain GET, not tRPC)
-app.get("/specs/:id/export.:ext", async (c) => {
-  const { id, ext } = c.req.param();
-  if (ext !== "xlsx" && ext !== "pdf") {
-    return c.json({ error: "Invalid format" }, 400);
-  }
+// Two explicit routes instead of /export.:ext — Hono 4 dot-param matching is unreliable.
+async function handleExport(c: Parameters<Parameters<typeof app.get>[1]>[0], ext: "xlsx" | "pdf") {
+  const { id } = c.req.param();
 
-  // Authenticate via Lucia session cookie
   const cookieHeader = c.req.header("Cookie") ?? "";
   const sessionId = lucia.readSessionCookie(cookieHeader);
-  if (!sessionId) {
-    return c.json({ error: "Unauthorized" }, 401);
-  }
+  if (!sessionId) return c.json({ error: "Unauthorized" }, 401);
 
   const { session, user } = await lucia.validateSession(sessionId);
-  if (!session || !user) {
-    return c.json({ error: "Unauthorized" }, 401);
-  }
+  if (!session || !user) return c.json({ error: "Unauthorized" }, 401);
 
-  // Load spec (enforcing ownership)
   const [spec] = await db
     .select()
     .from(specifications)
@@ -59,9 +51,7 @@ app.get("/specs/:id/export.:ext", async (c) => {
     )
     .limit(1);
 
-  if (!spec) {
-    return c.json({ error: "Not found" }, 403);
-  }
+  if (!spec) return c.json({ error: "Not found" }, 403);
 
   const specItems = await db
     .select()
@@ -74,15 +64,15 @@ app.get("/specs/:id/export.:ext", async (c) => {
     queryLang === "sv" || queryLang === "en"
       ? queryLang
       : ((user.locale as "sv" | "en") || "sv");
-  const filename = `${spec.name.replace(/[^a-zA-Z0-9åäöÅÄÖ\- ]/g, "")}.${ext}`;
+
+  const safeName = spec.name.replace(/[^a-zA-Z0-9åäöÅÄÖ\- ]/g, "");
 
   if (ext === "xlsx") {
     const buffer = await renderXlsx(spec, specItems, lang);
     return new Response(buffer, {
       headers: {
-        "Content-Type":
-          "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-        "Content-Disposition": `attachment; filename="${filename}"`,
+        "Content-Type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        "Content-Disposition": `attachment; filename="${safeName}.xlsx"`,
       },
     });
   } else {
@@ -90,11 +80,14 @@ app.get("/specs/:id/export.:ext", async (c) => {
     return new Response(buffer, {
       headers: {
         "Content-Type": "application/pdf",
-        "Content-Disposition": `attachment; filename="${filename}"`,
+        "Content-Disposition": `attachment; filename="${safeName}.pdf"`,
       },
     });
   }
-});
+}
+
+app.get("/specs/:id/export.xlsx", (c) => handleExport(c, "xlsx"));
+app.get("/specs/:id/export.pdf", (c) => handleExport(c, "pdf"));
 
 app.all("/trpc/*", async (c) => {
   const response = await fetchRequestHandler({
