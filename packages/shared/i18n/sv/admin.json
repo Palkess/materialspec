@@ -1,0 +1,23 @@
+{
+  "title": "Användare",
+  "email": "E-post",
+  "name": "Namn",
+  "role": "Roll",
+  "created": "Skapad",
+  "admin": "Admin",
+  "user": "Användare",
+  "promote": "Gör till admin",
+  "demote": "Ta bort admin",
+  "resetLink": "Generera återställningslänk",
+  "linkGenerated": "Länk genererad! Kopiera:",
+  "lastAdmin": "Kan inte ta bort den sista administratören",
+  "actions": "Åtgärder",
+  "specs": "Specifikationer",
+  "noSpecs": "Inga specifikationer",
+  "reassignTo": "Flytta till",
+  "reassign": "Flytta",
+  "reassigned": "Flyttad!",
+  "selectAll": "Markera alla",
+  "deselectAll": "Avmarkera alla",
+  "hideSpecs": "Dölj"
+}

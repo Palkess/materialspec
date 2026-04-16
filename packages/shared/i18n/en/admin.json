@@ -1,0 +1,23 @@
+{
+  "title": "Users",
+  "email": "Email",
+  "name": "Name",
+  "role": "Role",
+  "created": "Created",
+  "admin": "Admin",
+  "user": "User",
+  "promote": "Make admin",
+  "demote": "Remove admin",
+  "resetLink": "Generate reset link",
+  "linkGenerated": "Link generated! Copy:",
+  "lastAdmin": "Cannot remove the last administrator",
+  "actions": "Actions",
+  "specs": "Specifications",
+  "noSpecs": "No specifications",
+  "reassignTo": "Move to",
+  "reassign": "Move",
+  "reassigned": "Moved!",
+  "selectAll": "Select all",
+  "deselectAll": "Deselect all",
+  "hideSpecs": "Hide"
+}

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { I18nextProvider, useTranslation } from "react-i18next";
 import { trpc } from "../lib/trpc";
 import { createI18n } from "../lib/i18n";
+import { useAuthGuard } from "../lib/useAuthGuard";
 
 interface User {
   id: string;
@@ -21,58 +22,10 @@ interface Spec {
   name: string;
 }
 
-const t_admin = {
-  sv: {
-    title: "Användare",
-    email: "E-post",
-    name: "Namn",
-    role: "Roll",
-    created: "Skapad",
-    admin: "Admin",
-    user: "Användare",
-    promote: "Gör till admin",
-    demote: "Ta bort admin",
-    resetLink: "Generera återställningslänk",
-    linkGenerated: "Länk genererad! Kopiera:",
-    lastAdmin: "Kan inte ta bort den sista administratören",
-    actions: "Åtgärder",
-    specs: "Specifikationer",
-    noSpecs: "Inga specifikationer",
-    reassignTo: "Flytta till",
-    reassign: "Flytta",
-    reassigned: "Flyttad!",
-    selectAll: "Markera alla",
-    deselectAll: "Avmarkera alla",
-    hideSpecs: "Dölj",
-  },
-  en: {
-    title: "Users",
-    email: "Email",
-    name: "Name",
-    role: "Role",
-    created: "Created",
-    admin: "Admin",
-    user: "User",
-    promote: "Make admin",
-    demote: "Remove admin",
-    resetLink: "Generate reset link",
-    linkGenerated: "Link generated! Copy:",
-    lastAdmin: "Cannot remove the last administrator",
-    actions: "Actions",
-    specs: "Specifications",
-    noSpecs: "No specifications",
-    reassignTo: "Move to",
-    reassign: "Move",
-    reassigned: "Moved!",
-    selectAll: "Select all",
-    deselectAll: "Deselect all",
-    hideSpecs: "Hide",
-  },
-};
-
 function AdminUserListInner({ lang }: Props) {
-  const labels = t_admin[lang];
+  const { t: tAdmin } = useTranslation("admin");
   const { t: tCommon } = useTranslation("common");
+  const { checking } = useAuthGuard(lang);
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [resetLinks, setResetLinks] = useState<Record<string, string>>({});
@@ -103,7 +56,7 @@ function AdminUserListInner({ lang }: Props) {
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "";
       if (msg.includes("lastAdmin")) {
-        setError(labels.lastAdmin);
+        setError(tAdmin("lastAdmin"));
       }
     }
   };
@@ -182,7 +135,7 @@ function AdminUserListInner({ lang }: Props) {
   return (
     <div className="w-full max-w-5xl mx-auto px-4 py-8">
       <h1 className="text-3xl font-bold text-white mb-8 tracking-tight">
-        {labels.title}
+        {tAdmin("title")}
       </h1>
 
       {error && (
@@ -196,19 +149,19 @@ function AdminUserListInner({ lang }: Props) {
           <thead>
             <tr className="border-b border-concrete-700">
               <th className="text-left px-4 py-3 text-xs font-bold text-neutral-400 uppercase tracking-wider">
-                {labels.email}
+                {tAdmin("email")}
               </th>
               <th className="text-left px-4 py-3 text-xs font-bold text-neutral-400 uppercase tracking-wider">
-                {labels.name}
+                {tAdmin("name")}
               </th>
               <th className="text-left px-4 py-3 text-xs font-bold text-neutral-400 uppercase tracking-wider">
-                {labels.role}
+                {tAdmin("role")}
               </th>
               <th className="text-left px-4 py-3 text-xs font-bold text-neutral-400 uppercase tracking-wider">
-                {labels.created}
+                {tAdmin("created")}
               </th>
               <th className="text-right px-4 py-3 text-xs font-bold text-neutral-400 uppercase tracking-wider">
-                {labels.actions}
+                {tAdmin("actions")}
               </th>
             </tr>
           </thead>
@@ -230,7 +183,7 @@ function AdminUserListInner({ lang }: Props) {
                         : "bg-concrete-700 text-neutral-400"
                     }`}
                   >
-                    {user.isAdmin ? labels.admin : labels.user}
+                    {user.isAdmin ? tAdmin("admin") : tAdmin("user")}
                   </span>
                 </td>
                 <td className="px-4 py-4 text-neutral-400 text-sm">
@@ -248,7 +201,7 @@ function AdminUserListInner({ lang }: Props) {
                           : "bg-concrete-800 hover:bg-concrete-700 text-neutral-200"
                       }`}
                     >
-                      {expandedUser === user.id ? labels.hideSpecs : labels.specs}
+                      {expandedUser === user.id ? tAdmin("hideSpecs") : tAdmin("specs")}
                     </button>
                     <button
                       onClick={() =>
@@ -260,19 +213,19 @@ function AdminUserListInner({ lang }: Props) {
                           : "bg-concrete-800 hover:bg-concrete-700 text-neutral-200"
                       }`}
                     >
-                      {user.isAdmin ? labels.demote : labels.promote}
+                      {user.isAdmin ? tAdmin("demote") : tAdmin("promote")}
                     </button>
                     <button
                       onClick={() => handleGenerateResetLink(user.id)}
                       className="text-xs px-4 py-2 bg-concrete-800 hover:bg-concrete-700 text-neutral-200 rounded font-bold uppercase tracking-wide transition-colors"
                     >
-                      {labels.resetLink}
+                      {tAdmin("resetLink")}
                     </button>
                   </div>
                   {resetLinks[user.id] && (
                     <div className="mt-3 text-left bg-concrete-800/50 rounded p-3">
                       <p className="text-xs text-safety-400 font-bold mb-2 uppercase tracking-wide">
-                        {labels.linkGenerated}
+                        {tAdmin("linkGenerated")}
                       </p>
                       <input
                         type="text"
@@ -291,7 +244,7 @@ function AdminUserListInner({ lang }: Props) {
                     <div className="bg-concrete-800/30 rounded-lg p-4">
                       <div className="flex items-center justify-between mb-3">
                         <h3 className="text-sm font-bold text-neutral-200 uppercase tracking-wide">
-                          {labels.specs} — {user.name}
+                          {tAdmin("specs")} — {user.name}
                         </h3>
                         {(userSpecs[user.id]?.length || 0) > 0 && (
                           <button
@@ -299,15 +252,15 @@ function AdminUserListInner({ lang }: Props) {
                             className="text-xs text-safety-500 hover:text-safety-400 font-bold uppercase tracking-wide transition-colors"
                           >
                             {selectedSpecs.size === (userSpecs[user.id]?.length || 0)
-                              ? labels.deselectAll
-                              : labels.selectAll}
+                              ? tAdmin("deselectAll")
+                              : tAdmin("selectAll")}
                           </button>
                         )}
                       </div>
                       {!userSpecs[user.id] ? (
                         <p className="text-neutral-500 text-sm">{tCommon("loading")}</p>
                       ) : userSpecs[user.id].length === 0 ? (
-                        <p className="text-neutral-500 text-sm">{labels.noSpecs}</p>
+                        <p className="text-neutral-500 text-sm">{tAdmin("noSpecs")}</p>
                       ) : (
                         <>
                           <div className="space-y-1 mb-4 max-h-48 overflow-y-auto">
@@ -333,7 +286,7 @@ function AdminUserListInner({ lang }: Props) {
                           {selectedSpecs.size > 0 && (
                             <div className="flex items-center gap-3 pt-3 border-t border-concrete-700">
                               <span className="text-xs font-bold text-neutral-400 uppercase tracking-wide">
-                                {labels.reassignTo}
+                                {tAdmin("reassignTo")}
                               </span>
                               <select
                                 value={reassignTarget}
@@ -355,7 +308,7 @@ function AdminUserListInner({ lang }: Props) {
                                 disabled={!reassignTarget || reassigning}
                                 className="min-h-btn px-6 py-2 bg-safety-500 hover:bg-safety-400 text-concrete-950 font-bold text-xs uppercase tracking-wide rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                               >
-                                {reassigning ? "..." : `${labels.reassign} (${selectedSpecs.size})`}
+                                {reassigning ? "..." : `${tAdmin("reassign")} (${selectedSpecs.size})`}
                               </button>
                             </div>
                           )}

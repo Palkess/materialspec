@@ -94,7 +94,7 @@ export async function renderPdf(
       doc.text(fmtNum(item.quantity, lang), cols[2], y, {
         width: cols[3] - cols[2] - 5,
       });
-      doc.text(fmtCurrency(roundForDisplay(line.net.div(item.quantity || "1")), lang), cols[3], y, {
+      doc.text(fmtCurrency(roundForDisplay(item.pricePerUnit), lang), cols[3], y, {
         width: cols[4] - cols[3] - 5,
       });
       doc.text(`${(parseFloat(item.taxRate) * 100).toFixed(0)} %`, cols[4], y, {

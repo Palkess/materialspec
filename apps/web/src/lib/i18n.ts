@@ -6,12 +6,14 @@ import svAuth from "@materialspec/shared/i18n/sv/auth.json";
 import svSpecs from "@materialspec/shared/i18n/sv/specs.json";
 import svErrors from "@materialspec/shared/i18n/sv/errors.json";
 import svExport from "@materialspec/shared/i18n/sv/export.json";
+import svAdmin from "@materialspec/shared/i18n/sv/admin.json";
 
 import enCommon from "@materialspec/shared/i18n/en/common.json";
 import enAuth from "@materialspec/shared/i18n/en/auth.json";
 import enSpecs from "@materialspec/shared/i18n/en/specs.json";
 import enErrors from "@materialspec/shared/i18n/en/errors.json";
 import enExport from "@materialspec/shared/i18n/en/export.json";
+import enAdmin from "@materialspec/shared/i18n/en/admin.json";
 
 export function createI18n(lang: "sv" | "en") {
   const instance = i18next.createInstance();
@@ -20,7 +22,7 @@ export function createI18n(lang: "sv" | "en") {
     lng: lang,
     fallbackLng: "sv",
     defaultNS: "common",
-    ns: ["common", "auth", "specs", "errors", "export"],
+    ns: ["common", "auth", "specs", "errors", "export", "admin"],
     resources: {
       sv: {
         common: svCommon,
@@ -28,6 +30,7 @@ export function createI18n(lang: "sv" | "en") {
         specs: svSpecs,
         errors: svErrors,
         export: svExport,
+        admin: svAdmin,
       },
       en: {
         common: enCommon,
@@ -35,6 +38,7 @@ export function createI18n(lang: "sv" | "en") {
         specs: enSpecs,
         errors: enErrors,
         export: enExport,
+        admin: enAdmin,
       },
     },
     interpolation: {
