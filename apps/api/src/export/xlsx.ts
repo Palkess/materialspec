@@ -105,7 +105,7 @@ export async function renderXlsx(
       "",
       "",
       fmtCurrency(roundForDisplay(group.tax), lang),
-      fmtCurrency(roundForDisplay(group.gross), lang),
+      "",
     ]);
   }
 

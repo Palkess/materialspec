@@ -41,7 +41,6 @@ export default function TotalsFooter({ items, lang }: Props) {
               {t("editor.totals.vatGroup", { rate: group.ratePercent })}
             </span>
             <span className="font-mono">
-              {formatMoney(roundForDisplay(group.net), lang)} +{" "}
               {formatMoney(roundForDisplay(group.tax), lang)}
             </span>
           </div>
