@@ -16,13 +16,36 @@ import {
   sortableKeyboardCoordinates,
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
-import { specUpdateSchema } from "@materialspec/shared";
+import { z } from "zod";
+import { UNITS, VAT_RATES } from "@materialspec/shared";
 import { trpc } from "../lib/trpc";
 import { createI18n } from "../lib/i18n";
 import { useAuthGuard } from "../lib/useAuthGuard";
 import SpecHeader from "./SpecHeader";
 import ItemRow from "./ItemRow";
 import TotalsFooter from "./TotalsFooter";
+
+// Form schema allows empty item names — they are filtered out before save.
+// The API schemas enforce min(1) on item names after filtering.
+const specFormSchema = z.object({
+  name: z.string().min(1, "Name is required").max(255),
+  description: z.string().max(2000).default(""),
+  responsiblePerson: z.string().max(255).default(""),
+  items: z.array(
+    z.object({
+      id: z.string().optional(),
+      name: z.string().max(255).default(""),
+      description: z.string().max(1000).default(""),
+      unit: z.enum(UNITS).default("pcs"),
+      quantity: z.string().default("0"),
+      pricePerUnit: z.string().default("0"),
+      taxRate: z.string().refine(
+        (v) => VAT_RATES.map(String).includes(v),
+        "Invalid VAT rate"
+      ).default("0.25"),
+    })
+  ).default([]),
+});
 
 export interface SpecFormValues {
   name: string;
@@ -68,6 +91,7 @@ function SpecEditorInner({ lang, specId, userName }: Props) {
   const { user: authUser, checking } = useAuthGuard(lang);
   const apiUrl = getApiUrl();
   const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState("");
   const [savedId, setSavedId] = useState(specId);
 
   const nameRefs = useRef<Map<number, HTMLInputElement | null>>(new Map());
@@ -81,7 +105,7 @@ function SpecEditorInner({ lang, specId, userName }: Props) {
     reset,
     formState: { errors, isDirty },
   } = useForm<SpecFormValues>({
-    resolver: zodResolver(specUpdateSchema),
+    resolver: zodResolver(specFormSchema),
     defaultValues: {
       name: "",
       description: "",
@@ -192,6 +216,7 @@ function SpecEditorInner({ lang, specId, userName }: Props) {
 
   const onSave = async (data: SpecFormValues) => {
     setSaving(true);
+    setSaveError("");
     try {
       // Filter empty trailing rows
       const filteredItems = data.items.filter(
@@ -220,6 +245,8 @@ function SpecEditorInner({ lang, specId, userName }: Props) {
       }
     } catch (err) {
       console.error("Save failed:", err);
+      const msg = err instanceof Error ? err.message : String(err);
+      setSaveError(msg || "Save failed — check console for details");
     } finally {
       setSaving(false);
     }
@@ -231,6 +258,11 @@ function SpecEditorInner({ lang, specId, userName }: Props) {
 
   return (
     <div className="w-full max-w-6xl mx-auto px-4 py-8">
+      {saveError && (
+        <div className="mb-4 bg-red-900/50 border-l-4 border-red-500 text-red-200 px-4 py-3 rounded font-bold text-sm">
+          {saveError}
+        </div>
+      )}
       <form onSubmit={handleSubmit(onSave)} className="space-y-6">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
