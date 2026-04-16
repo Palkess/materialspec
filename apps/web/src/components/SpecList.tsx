@@ -58,6 +58,7 @@ function SpecListInner({ lang }: Props) {
   const [sortCol, setSortCol] = useState<SortColumn>("createdAt");
   const [sortDir, setSortDir] = useState<SortDir>("desc");
   const [openMenu, setOpenMenu] = useState<string | null>(null);
+  const [menuPos, setMenuPos] = useState({ top: 0, right: 0 });
 
   useEffect(() => {
     const handler = (e: MouseEvent) => {
@@ -69,6 +70,19 @@ function SpecListInner({ lang }: Props) {
     document.addEventListener("mousedown", handler);
     return () => document.removeEventListener("mousedown", handler);
   }, []);
+
+  const toggleMenu = (id: string, btn: HTMLButtonElement) => {
+    if (openMenu === id) {
+      setOpenMenu(null);
+      return;
+    }
+    const rect = btn.getBoundingClientRect();
+    setMenuPos({
+      top: rect.bottom + window.scrollY + 4,
+      right: window.innerWidth - rect.right,
+    });
+    setOpenMenu(id);
+  };
   const apiUrl = getApiUrl();
 
   const loadSpecs = async () => {
@@ -252,9 +266,9 @@ function SpecListInner({ lang }: Props) {
                   <td className="px-4 py-4 text-right">
                     <div className="flex gap-2 justify-end items-center">
                       {/* Three-dot menu */}
-                      <div className="relative" data-spec-menu={spec.id}>
+                      <div data-spec-menu={spec.id}>
                         <button
-                          onClick={() => setOpenMenu(openMenu === spec.id ? null : spec.id)}
+                          onClick={(e) => toggleMenu(spec.id, e.currentTarget)}
                           className="p-2 rounded text-neutral-400 hover:text-white hover:bg-concrete-700 transition-colors"
                           aria-label="More actions"
                           title="More actions"
@@ -265,31 +279,6 @@ function SpecListInner({ lang }: Props) {
                             <circle cx="8" cy="13.5" r="1.5"/>
                           </svg>
                         </button>
-                        {openMenu === spec.id && (
-                          <div className="absolute right-0 top-full mt-1 z-10 w-44 bg-concrete-800 border border-concrete-600 rounded-lg shadow-xl overflow-hidden">
-                            <a
-                              href={`${apiUrl}/specs/${spec.id}/export.xlsx?lang=${lang}`}
-                              className="flex items-center gap-2 px-4 py-2.5 text-sm text-neutral-200 hover:bg-concrete-700 hover:text-white transition-colors font-bold uppercase tracking-wide"
-                              onClick={() => setOpenMenu(null)}
-                            >
-                              {t("list.exportXlsx")}
-                            </a>
-                            <a
-                              href={`${apiUrl}/specs/${spec.id}/export.pdf?lang=${lang}`}
-                              className="flex items-center gap-2 px-4 py-2.5 text-sm text-neutral-200 hover:bg-concrete-700 hover:text-white transition-colors font-bold uppercase tracking-wide"
-                              onClick={() => setOpenMenu(null)}
-                            >
-                              {t("list.exportPdf")}
-                            </a>
-                            <div className="border-t border-concrete-600" />
-                            <button
-                              onClick={() => { setOpenMenu(null); handleDuplicate(spec.id); }}
-                              className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-neutral-200 hover:bg-concrete-700 hover:text-white transition-colors font-bold uppercase tracking-wide text-left"
-                            >
-                              {t("list.duplicate")}
-                            </button>
-                          </div>
-                        )}
                       </div>
                       {/* Delete stays visible */}
                       <button
@@ -304,6 +293,37 @@ function SpecListInner({ lang }: Props) {
               ))}
             </tbody>
           </table>
+        </div>
+      )}
+
+      {/* Fixed-position popover — rendered outside the overflow-hidden table */}
+      {openMenu && (
+        <div
+          data-spec-menu={openMenu}
+          style={{ position: "fixed", top: menuPos.top, right: menuPos.right, zIndex: 50 }}
+          className="w-44 bg-concrete-800 border border-concrete-600 rounded-lg shadow-xl overflow-hidden"
+        >
+          <a
+            href={`${apiUrl}/specs/${openMenu}/export.xlsx?lang=${lang}`}
+            className="flex items-center px-4 py-2.5 text-sm text-neutral-200 hover:bg-concrete-700 hover:text-white transition-colors font-bold uppercase tracking-wide"
+            onClick={() => setOpenMenu(null)}
+          >
+            {t("list.exportXlsx")}
+          </a>
+          <a
+            href={`${apiUrl}/specs/${openMenu}/export.pdf?lang=${lang}`}
+            className="flex items-center px-4 py-2.5 text-sm text-neutral-200 hover:bg-concrete-700 hover:text-white transition-colors font-bold uppercase tracking-wide"
+            onClick={() => setOpenMenu(null)}
+          >
+            {t("list.exportPdf")}
+          </a>
+          <div className="border-t border-concrete-600" />
+          <button
+            onClick={() => { setOpenMenu(null); handleDuplicate(openMenu); }}
+            className="w-full flex items-center px-4 py-2.5 text-sm text-neutral-200 hover:bg-concrete-700 hover:text-white transition-colors font-bold uppercase tracking-wide text-left"
+          >
+            {t("list.duplicate")}
+          </button>
         </div>
       )}
     </div>
