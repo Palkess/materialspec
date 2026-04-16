@@ -79,7 +79,7 @@ function SignupFormInner({ lang }: Props) {
             type="text"
             autoComplete="name"
             {...register("name")}
-            className="w-full px-4 py-3 bg-concrete-800 border border-concrete-600 rounded text-white placeholder-gray-500 focus:outline-none focus:border-safety-500 focus:ring-1 focus:ring-safety-500 transition-colors"
+            className="w-full px-4 py-3 bg-concrete-800 border border-concrete-600 rounded text-white placeholder-neutral-500 focus:outline-none focus:border-safety-500 focus:ring-1 focus:ring-safety-500 transition-colors"
           />
           {errors.name && (
             <p className="text-red-400 text-sm mt-1 font-bold">
@@ -100,7 +100,7 @@ function SignupFormInner({ lang }: Props) {
             type="email"
             autoComplete="email"
             {...register("email")}
-            className="w-full px-4 py-3 bg-concrete-800 border border-concrete-600 rounded text-white placeholder-gray-500 focus:outline-none focus:border-safety-500 focus:ring-1 focus:ring-safety-500 transition-colors"
+            className="w-full px-4 py-3 bg-concrete-800 border border-concrete-600 rounded text-white placeholder-neutral-500 focus:outline-none focus:border-safety-500 focus:ring-1 focus:ring-safety-500 transition-colors"
           />
           {errors.email && (
             <p className="text-red-400 text-sm mt-1 font-bold">
@@ -121,7 +121,7 @@ function SignupFormInner({ lang }: Props) {
             type="password"
             autoComplete="new-password"
             {...register("password")}
-            className="w-full px-4 py-3 bg-concrete-800 border border-concrete-600 rounded text-white placeholder-gray-500 focus:outline-none focus:border-safety-500 focus:ring-1 focus:ring-safety-500 transition-colors"
+            className="w-full px-4 py-3 bg-concrete-800 border border-concrete-600 rounded text-white placeholder-neutral-500 focus:outline-none focus:border-safety-500 focus:ring-1 focus:ring-safety-500 transition-colors"
           />
           <p className="text-neutral-500 text-xs mt-1">
             {t("signup.passwordHint")}
