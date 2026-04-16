@@ -1,9 +1,9 @@
 import { z } from "zod";
 import { randomBytes, createHash } from "node:crypto";
-import { eq, sql } from "drizzle-orm";
+import { eq, and, isNull, sql } from "drizzle-orm";
 import { router, adminProcedure } from "./trpc.js";
 import { db } from "../db/index.js";
-import { users, passwordResetTokens } from "../db/schema.js";
+import { users, passwordResetTokens, specifications } from "../db/schema.js";
 
 export const adminRouter = router({
   users: router({
@@ -69,6 +69,46 @@ export const adminRouter = router({
         });
 
         return { token: rawToken };
+      }),
+  }),
+
+  specs: router({
+    listByUser: adminProcedure
+      .input(z.object({ userId: z.string().uuid() }))
+      .query(async ({ input }) => {
+        // Return only id and name — never contents
+        return db
+          .select({
+            id: specifications.id,
+            name: specifications.name,
+          })
+          .from(specifications)
+          .where(
+            and(
+              eq(specifications.userId, input.userId),
+              isNull(specifications.deletedAt)
+            )
+          )
+          .orderBy(specifications.name);
+      }),
+
+    reassignOwner: adminProcedure
+      .input(
+        z.object({
+          specIds: z.array(z.string().uuid()).min(1),
+          newOwnerId: z.string().uuid(),
+        })
+      )
+      .mutation(async ({ input }) => {
+        let count = 0;
+        for (const specId of input.specIds) {
+          const result = await db
+            .update(specifications)
+            .set({ userId: input.newOwnerId })
+            .where(eq(specifications.id, specId));
+          count++;
+        }
+        return { count };
       }),
   }),
 });
