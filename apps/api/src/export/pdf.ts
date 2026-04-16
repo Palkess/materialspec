@@ -32,6 +32,15 @@ function fmtCurrency(value: string, lang: "sv" | "en"): string {
   return lang === "sv" ? `${formatted} kr` : `${formatted} SEK`;
 }
 
+// Layout constants
+const L = 50;           // left margin
+const R = 545;          // right margin
+const ROW_H = 16;       // row height (px)
+const LINE_GAP = 4;     // gap between line and text
+
+// Column x-positions: Name | Unit | Qty | Price | VAT% | Tax | Total
+const COLS = [50, 195, 240, 295, 365, 415, 475];
+
 export async function renderPdf(
   spec: ExportSpec,
   items: ExportItem[],
@@ -40,33 +49,26 @@ export async function renderPdf(
   const t = translations[lang];
 
   return new Promise((resolve, reject) => {
-    const doc = new PDFDocument({ size: "A4", margin: 50 });
+    const doc = new PDFDocument({ size: "A4", margin: L });
     const chunks: Buffer[] = [];
 
     doc.on("data", (chunk: Buffer) => chunks.push(chunk));
     doc.on("end", () => resolve(Buffer.concat(chunks)));
     doc.on("error", reject);
 
-    // Title
-    doc.fontSize(20).font("Helvetica-Bold").text(t.title);
-    doc.moveDown(0.5);
-
-    // Spec info
+    // ── Header block ──────────────────────────────────────────
+    doc.fontSize(20).font("Helvetica-Bold").text(t.title, L, 50);
+    doc.moveDown(0.4);
     doc.fontSize(14).font("Helvetica-Bold").text(spec.name);
     if (spec.description) {
       doc.fontSize(10).font("Helvetica").text(spec.description);
     }
-    doc
-      .fontSize(10)
-      .font("Helvetica")
-      .text(`${t.responsiblePerson}: ${spec.responsiblePerson}`);
-    doc.text(
-      `${t.generatedAt}: ${new Date().toLocaleDateString(lang === "sv" ? "sv-SE" : "en-US")}`
-    );
-    doc.moveDown();
+    doc.fontSize(10).font("Helvetica")
+      .text(`${t.responsiblePerson}: ${spec.responsiblePerson}`)
+      .text(`${t.generatedAt}: ${new Date().toLocaleDateString(lang === "sv" ? "sv-SE" : "en-US")}`);
+    doc.moveDown(0.8);
 
-    // Table header
-    const cols = [50, 180, 280, 320, 370, 420, 480];
+    // ── Table header row ──────────────────────────────────────
     const headers = [
       t.columns.name,
       t.columns.unit,
@@ -77,66 +79,83 @@ export async function renderPdf(
       t.columns.total,
     ];
 
-    doc.fontSize(8).font("Helvetica-Bold");
-    const headerY = doc.y;
-    headers.forEach((h, i) => {
-      doc.text(h, cols[i], headerY, { width: (cols[i + 1] || 550) - cols[i] });
-    });
-    doc.moveTo(50, doc.y + 5).lineTo(550, doc.y + 5).stroke();
-    doc.moveDown(0.3);
+    let y = doc.y;
 
-    // Item rows
-    doc.font("Helvetica").fontSize(8);
+    // Top border
+    doc.moveTo(L, y).lineTo(R, y).stroke();
+    y += LINE_GAP;
+
+    // Header text
+    doc.fontSize(8).font("Helvetica-Bold");
+    headers.forEach((h, i) => {
+      const colW = (COLS[i + 1] ?? R) - COLS[i] - 3;
+      const align = i >= 2 ? "right" : "left";
+      doc.text(h, COLS[i], y, { width: colW, align, lineBreak: false });
+    });
+    y += ROW_H;
+
+    // Header bottom border
+    doc.moveTo(L, y).lineTo(R, y).stroke();
+    y += LINE_GAP;
+
+    // ── Item rows ─────────────────────────────────────────────
+    doc.fontSize(8).font("Helvetica");
     for (const item of items) {
       const line = lineTotal(item);
-      const y = doc.y;
-      doc.text(item.name, cols[0], y, { width: cols[1] - cols[0] - 5 });
-      doc.text(item.unit, cols[1], y, { width: cols[2] - cols[1] - 5 });
-      doc.text(fmtNum(item.quantity, lang), cols[2], y, {
-        width: cols[3] - cols[2] - 5,
+      const cells = [
+        item.name,
+        item.unit,
+        fmtNum(item.quantity, lang),
+        fmtCurrency(roundForDisplay(new Decimal(item.pricePerUnit)), lang),
+        `${(parseFloat(item.taxRate) * 100).toFixed(0)} %`,
+        fmtCurrency(roundForDisplay(line.tax), lang),
+        fmtCurrency(roundForDisplay(line.gross), lang),
+      ];
+
+      cells.forEach((cell, i) => {
+        const colW = (COLS[i + 1] ?? R) - COLS[i] - 3;
+        const align = i >= 2 ? "right" : "left";
+        doc.text(cell, COLS[i], y, { width: colW, align, lineBreak: false });
       });
-      doc.text(fmtCurrency(roundForDisplay(new Decimal(item.pricePerUnit)), lang), cols[3], y, {
-        width: cols[4] - cols[3] - 5,
-      });
-      doc.text(`${(parseFloat(item.taxRate) * 100).toFixed(0)} %`, cols[4], y, {
-        width: cols[5] - cols[4] - 5,
-      });
-      doc.text(fmtCurrency(roundForDisplay(line.tax), lang), cols[5], y, {
-        width: cols[6] - cols[5] - 5,
-      });
-      doc.text(fmtCurrency(roundForDisplay(line.gross), lang), cols[6], y, {
-        width: 550 - cols[6],
-      });
-      doc.moveDown(0.3);
+      y += ROW_H;
     }
 
-    doc.moveDown();
-    doc.moveTo(50, doc.y).lineTo(550, doc.y).stroke();
-    doc.moveDown(0.5);
+    // Bottom border
+    doc.moveTo(L, y).lineTo(R, y).stroke();
+    y += 14;
 
-    // Totals
+    // ── Totals section ────────────────────────────────────────
+    // Two-column layout: label (left) | value (right-aligned)
     const totals = grandTotals(items);
-    doc.font("Helvetica").fontSize(9);
-    for (const group of totals.groups) {
-      doc.text(
-        `${t.totals.vatGroup.replace("{{rate}}", group.ratePercent)}: ${fmtCurrency(roundForDisplay(group.net), lang)} + ${fmtCurrency(roundForDisplay(group.tax), lang)}`
-      );
+    const labelX = L;
+    const labelW = 280;
+    const valueX = 340;
+    const valueW = R - valueX;
+
+    function totalsRow(label: string, value: string, bold = false, largeFontSize = 9) {
+      doc.fontSize(largeFontSize).font(bold ? "Helvetica-Bold" : "Helvetica");
+      doc.text(label, labelX, y, { width: labelW, lineBreak: false });
+      doc.text(value, valueX, y, { width: valueW, align: "right", lineBreak: false });
+      y += largeFontSize + 5;
     }
 
-    doc.moveDown(0.3);
-    doc
-      .font("Helvetica-Bold")
-      .text(
-        `${t.totals.subtotal}: ${fmtCurrency(roundForDisplay(totals.net), lang)}`
-      );
-    doc.text(
-      `${t.totals.vat}: ${fmtCurrency(roundForDisplay(totals.tax), lang)}`
-    );
-    doc
-      .fontSize(12)
-      .text(
-        `${t.totals.grandTotal}: ${fmtCurrency(roundForDisplay(totals.gross), lang)}`
-      );
+    doc.fontSize(9).font("Helvetica");
+    for (const group of totals.groups) {
+      const label = t.totals.vatGroup.replace("{{rate}}", group.ratePercent);
+      const value = `${fmtCurrency(roundForDisplay(group.net), lang)} + ${fmtCurrency(roundForDisplay(group.tax), lang)}`;
+      totalsRow(label, value);
+    }
+
+    y += 4; // small gap before summary
+
+    totalsRow(t.totals.subtotal, fmtCurrency(roundForDisplay(totals.net), lang), true);
+    totalsRow(t.totals.vat, fmtCurrency(roundForDisplay(totals.tax), lang), true);
+
+    // Grand total separator line
+    doc.moveTo(valueX, y).lineTo(R, y).stroke();
+    y += 4;
+
+    totalsRow(t.totals.grandTotal, fmtCurrency(roundForDisplay(totals.gross), lang), true, 11);
 
     doc.end();
   });
