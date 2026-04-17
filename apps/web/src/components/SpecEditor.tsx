@@ -220,7 +220,13 @@ function SpecEditorInner({ lang, specId, userName }: Props) {
       // Filter empty trailing rows and normalize numeric strings from Postgres.
       // Postgres numeric(x,y) returns trailing zeros (e.g. "0.2500", "5.000")
       // which fail the API's VAT_RATES.map(String) check and regex patterns.
+      // fields.length is the authoritative count of visible rows. data.items may
+      // be longer because react-hook-form's shouldUnregister:false preserves
+      // unregistered field values on unmount, re-extending the array after
+      // useFieldArray.remove() shrinks it. Slicing to fields.length drops those
+      // phantom entries before filtering and sending to the API.
       const filteredItems = data.items
+        .slice(0, fields.length)
         .filter((item) => item.name.trim() !== "")
         .map((item) => ({
           ...item,
@@ -237,7 +243,6 @@ function SpecEditorInner({ lang, specId, userName }: Props) {
           responsiblePerson: data.responsiblePerson,
           items: filteredItems,
         });
-        reset(data);
       } else {
         const result = await trpc.specs.create.mutate({
           name: data.name,
@@ -246,9 +251,9 @@ function SpecEditorInner({ lang, specId, userName }: Props) {
           items: filteredItems,
         });
         setSavedId(result.id);
-        reset(data);
         window.history.replaceState(null, "", `/${lang}/specs/${result.id}/edit`);
       }
+      reset({ ...data, items: filteredItems });
     } catch (err) {
       console.error("Save failed:", err);
       const msg = err instanceof Error ? err.message : String(err);
