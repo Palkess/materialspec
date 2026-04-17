@@ -1,4 +1,15 @@
 import { defineConfig, devices } from "@playwright/test";
+import fs from "fs";
+import path from "path";
+import { fileURLToPath } from "url";
+
+const envFile = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../../.env");
+if (fs.existsSync(envFile)) {
+  for (const line of fs.readFileSync(envFile, "utf8").split("\n")) {
+    const match = line.match(/^([^#=\s][^=]*)=(.*)$/);
+    if (match) process.env[match[1].trim()] ??= match[2].trim();
+  }
+}
 
 export default defineConfig({
   testDir: "./e2e",

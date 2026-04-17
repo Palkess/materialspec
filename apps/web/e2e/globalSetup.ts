@@ -4,7 +4,7 @@
  * docker-compose.yml), so we just poll until the API health endpoint responds.
  */
 async function globalSetup() {
-  const apiUrl = process.env.E2E_API_URL || "http://localhost:3001";
+  const apiUrl = process.env.E2E_API_URL || process.env.PUBLIC_API_URL || "http://localhost:3001";
   const maxAttempts = 30;
   const delayMs = 2000;
 
