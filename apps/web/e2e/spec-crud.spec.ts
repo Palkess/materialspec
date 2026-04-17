@@ -69,7 +69,7 @@ test.describe("Spec CRUD", () => {
     await page.waitForTimeout(1500);
     await page.locator("a:has-text('Editable Spec')").click();
     await page.waitForURL(/\/edit/, { timeout: 10000 });
-    await page.fill('input[name="description"]', "Updated description");
+    await page.getByLabel(/beskrivning|description/i).first().fill("Updated description");
     await page.click('button[type="submit"]');
     await page.waitForTimeout(1000);
 
