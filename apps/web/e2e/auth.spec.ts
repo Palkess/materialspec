@@ -27,12 +27,13 @@ test.describe("Authentication", () => {
     await page.click('button[type="submit"]');
     await page.waitForURL("**/sv/specs**");
 
-    // Logout
+    // Logout via the real UI affordance
     await page.goto("/sv/account");
-    await page.waitForTimeout(1000);
+    await page.waitForTimeout(500);
+    await page.locator('button:has-text("Logga ut")').click();
+    await page.waitForURL(/\/sv\/login/, { timeout: 5000 });
 
     // Now login
-    await page.goto("/sv/login");
     await page.fill('input[type="email"]', email);
     await page.fill('input[type="password"]', "password123");
     await page.click('button[type="submit"]');
