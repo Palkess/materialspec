@@ -100,6 +100,52 @@ test.describe("Spec CRUD", () => {
     await expect(page.locator("body")).toContainText("(kopia)");
   });
 
+  test("adding an empty row and saving once clears the unsaved-changes indicator", async ({ page }) => {
+    await signupAndLand(page);
+
+    // Create a spec with one named item so we have something to edit
+    await page.goto("/sv/specs/new");
+    await page.waitForTimeout(1000);
+    await page.fill('input[name="name"]', "Empty Row Test Spec");
+    await page.click('button:has-text("Lägg till rad")');
+    await page.waitForTimeout(300);
+    const rows = page.locator("table tbody tr");
+    await rows.first().locator("input[placeholder]").first().fill("Item 1");
+    await page.click('button[type="submit"]');
+    await page.waitForURL(/\/sv\/specs\/.+\/edit/, { timeout: 10000 });
+
+    // Navigate to the edit URL fresh so the spec-load effect fires and
+    // establishes a clean baseline with DB values
+    const editUrl = page.url();
+    await page.goto(editUrl);
+    await page.waitForTimeout(1500);
+
+    // Precondition: form is clean
+    await expect(page.getByText("Du har osparade ändringar")).not.toBeVisible();
+
+    // Add an empty row (leave name blank — this is the scenario that triggered the bug)
+    await page.click('button:has-text("Lägg till rad")');
+    await page.waitForTimeout(300);
+    await expect(page.getByText("Du har osparade ändringar")).toBeVisible();
+
+    // Save once
+    await page.click('button[type="submit"]');
+    await page.waitForTimeout(1500);
+
+    // After ONE save the indicator must be gone
+    await expect(page.getByText("Du har osparade ändringar")).not.toBeVisible();
+
+    // Navigating back must not trigger the unsaved-changes confirm dialog
+    let dialogSeen = false;
+    page.on("dialog", async (dialog) => {
+      dialogSeen = true;
+      await dialog.accept();
+    });
+    await page.locator("a:has-text('Tillbaka')").first().click();
+    await page.waitForURL("**/sv/specs", { timeout: 5000 });
+    expect(dialogSeen).toBe(false);
+  });
+
   test("soft delete removes spec from list", async ({ page }) => {
     await signupAndLand(page);
 

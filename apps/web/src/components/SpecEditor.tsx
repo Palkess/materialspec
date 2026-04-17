@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react";
+import { flushSync } from "react-dom";
 import { useForm, useFieldArray, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { I18nextProvider, useTranslation } from "react-i18next";
@@ -116,6 +117,7 @@ function SpecEditorInner({ lang, specId, userName }: Props) {
   const { fields, append, remove, move } = useFieldArray({
     control,
     name: "items",
+    shouldUnregister: true,
   });
 
   const watchedItems = useWatch({ control, name: "items" }) || [];
@@ -139,9 +141,9 @@ function SpecEditorInner({ lang, specId, userName }: Props) {
             name: item.name,
             description: item.description,
             unit: item.unit,
-            quantity: item.quantity,
-            pricePerUnit: item.pricePerUnit,
-            taxRate: item.taxRate,
+            quantity: item.quantity.replace(/\.?0+$/, "") || "0",
+            pricePerUnit: item.pricePerUnit.replace(/\.?0+$/, "") || "0",
+            taxRate: parseFloat(item.taxRate).toString(),
           })),
         });
       }).catch(() => {
@@ -253,6 +255,21 @@ function SpecEditorInner({ lang, specId, userName }: Props) {
         setSavedId(result.id);
         window.history.replaceState(null, "", `/${lang}/specs/${result.id}/edit`);
       }
+      // Remove empty rows synchronously before reset() iterates registered inputs.
+      // Without flushSync, the empty row's ItemRow is still mounted when reset()
+      // runs, so RHF calls set(_formValues, 'items.N.name', undefined) for those
+      // inputs — extending the array with a phantom {} that keeps isDirty true.
+      // flushSync forces the removal render (and, with shouldUnregister:true, the
+      // unregistration) to complete before reset() sees any registered fields.
+      const emptyIndices = data.items
+        .slice(0, fields.length)
+        .reduce<number[]>((acc, item, i) => {
+          if (item.name.trim() === "") acc.push(i);
+          return acc;
+        }, []);
+      if (emptyIndices.length > 0) {
+        flushSync(() => remove(emptyIndices));
+      }
       reset({ ...data, items: filteredItems });
     } catch (err) {
       console.error("Save failed:", err);
@@ -319,7 +336,12 @@ function SpecEditorInner({ lang, specId, userName }: Props) {
 
         <SpecHeader register={register} errors={errors} />
 
-        <div className="bg-concrete-900 border border-concrete-800 rounded-lg overflow-x-auto">
+        <DndContext
+          sensors={sensors}
+          collisionDetection={closestCenter}
+          onDragEnd={handleDragEnd}
+        >
+          <div className="bg-concrete-900 border border-concrete-800 rounded-lg overflow-x-auto">
           <table className="w-full min-w-[800px]">
             <thead>
               <tr className="border-b border-concrete-700">
@@ -351,44 +373,38 @@ function SpecEditorInner({ lang, specId, userName }: Props) {
                 <th className="px-2 py-3 w-8"></th>
               </tr>
             </thead>
-            <DndContext
-              sensors={sensors}
-              collisionDetection={closestCenter}
-              onDragEnd={handleDragEnd}
+            <SortableContext
+              items={fields.map((f) => f.id)}
+              strategy={verticalListSortingStrategy}
             >
-              <SortableContext
-                items={fields.map((f) => f.id)}
-                strategy={verticalListSortingStrategy}
-              >
-                <tbody>
-                  {fields.map((field, index) => (
-                    <ItemRow
-                      key={field.id}
-                      id={field.id}
-                      index={index}
-                      isLast={index === fields.length - 1}
-                      register={register}
-                      control={control}
-                      onRemove={() => remove(index)}
-                      onAppendRow={handleAppendRow}
-                      setValue={(name, value) =>
-                        setValue(name as `items.${number}.${string}`, value, {
-                          shouldDirty: true,
-                        })
-                      }
-                      lang={lang}
-                      nameInputRef={(el) => nameRefs.current.set(index, el)}
-                      priceInputRef={(el) => priceRefs.current.set(index, el)}
-                      nextRowNameRef={
-                        index < fields.length - 1
-                          ? () => nameRefs.current.get(index + 1) || null
-                          : null
-                      }
-                    />
-                  ))}
-                </tbody>
-              </SortableContext>
-            </DndContext>
+              <tbody>
+                {fields.map((field, index) => (
+                  <ItemRow
+                    key={field.id}
+                    id={field.id}
+                    index={index}
+                    isLast={index === fields.length - 1}
+                    register={register}
+                    control={control}
+                    onRemove={() => remove(index)}
+                    onAppendRow={handleAppendRow}
+                    setValue={(name, value) =>
+                      setValue(name as `items.${number}.${string}`, value, {
+                        shouldDirty: true,
+                      })
+                    }
+                    lang={lang}
+                    nameInputRef={(el) => nameRefs.current.set(index, el)}
+                    priceInputRef={(el) => priceRefs.current.set(index, el)}
+                    nextRowNameRef={
+                      index < fields.length - 1
+                        ? () => nameRefs.current.get(index + 1) || null
+                        : null
+                    }
+                  />
+                ))}
+              </tbody>
+            </SortableContext>
           </table>
 
           <div className="px-4 py-3 border-t border-concrete-800">
@@ -400,7 +416,8 @@ function SpecEditorInner({ lang, specId, userName }: Props) {
               + {t("editor.addRow")}
             </button>
           </div>
-        </div>
+          </div>
+        </DndContext>
 
         <TotalsFooter items={watchedItems || []} lang={lang} />
 
