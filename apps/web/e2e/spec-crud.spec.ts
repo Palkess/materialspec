@@ -89,10 +89,12 @@ test.describe("Spec CRUD", () => {
     await page.click('button[type="submit"]');
     await page.waitForURL(/\/edit/, { timeout: 10000 });
 
-    // Go to list and duplicate
+    // Go to list and duplicate via the row's kebab popover menu
     await page.goto("/sv/specs");
     await page.waitForTimeout(1000);
-    await page.locator('button:has-text("Duplicera")').first().click();
+    const row = page.locator('tr:has-text("Original Spec")').first();
+    await row.locator('button[aria-haspopup="menu"]').click();
+    await page.getByRole("menuitem", { name: /duplicera|duplicate/i }).click();
     await page.waitForTimeout(1000);
 
     // Both original and copy should appear
