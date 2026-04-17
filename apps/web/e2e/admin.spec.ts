@@ -113,8 +113,21 @@ test.describe("Admin", () => {
     await page.goto("/sv/admin/users");
     await page.waitForTimeout(1000);
 
-    // Find the admin user row (the seeded admin) and try to demote
     const adminEmail = process.env.E2E_ADMIN_EMAIL || "admin@materialspec.test";
+
+    // Establish precondition: the seeded admin must be the only admin.
+    // Earlier tests in this file may have promoted other users — demote them first.
+    while (true) {
+      const otherDemoteButtons = page.locator(
+        `tr:not(:has-text("${adminEmail}")) button:has-text("Ta bort admin")`
+      );
+      const count = await otherDemoteButtons.count();
+      if (count === 0) break;
+      await otherDemoteButtons.first().click();
+      await page.waitForTimeout(300);
+    }
+
+    // Now try to demote the sole remaining admin
     const adminRow = page.locator(`tr:has-text("${adminEmail}")`);
     await adminRow.locator('button:has-text("Ta bort admin")').click();
     await page.waitForTimeout(500);
