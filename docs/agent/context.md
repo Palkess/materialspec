@@ -53,6 +53,8 @@ Fixed list in `packages/shared/src/constants.ts`:
 
 Units are pure display labels — there is **no unit conversion** in the system. `5 m` and `500 cm` are different items with no relationship.
 
+**Locale display:** the unit `pcs` is displayed as `st` in Swedish (`"st"` = styck). All other units are locale-invariant. Use `unitLabel(unit, locale)` from `packages/shared/src/constants.ts` whenever displaying a unit to the user — do not format units directly. This applies to UnitSelect dropdowns, ItemRow, and export renderers (PDF/Excel).
+
 ---
 
 ## Money arithmetic rules

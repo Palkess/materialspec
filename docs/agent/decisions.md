@@ -86,6 +86,16 @@ Consult when making or evaluating architectural or design choices, or when you w
 
 ---
 
+## ADR-009 — Generic `app_setting` key/value table for runtime admin configuration (2026-04-18)
+
+**Context:** Admins need to toggle features (starting with self-registration) at runtime without a redeploy. Options were: env vars (requires redeploy), per-feature boolean columns (one migration per toggle), or a generic key/value table.
+
+**Decision:** A single `app_setting` table with `key text PK, value jsonb NOT NULL, updated_at timestamptz, updated_by uuid FK`. The API exposes per-setting typed procedures (`admin.settings.setSignupEnabled`) rather than a generic `set(key, value)` endpoint, preserving tRPC's end-to-end type safety while keeping the schema flexible.
+
+**Consequences:** New admin-controlled toggles require a new `admin.settings.setX` procedure and a `seedAppSettings()` upsert for the default — no new migration needed. The `updatedBy` FK is `uuid` (matching `user.id`) — do not use `text` or the FK constraint will fail (type mismatch). Each new default must be added to `seedAppSettings.ts`; forgetting this leaves the key absent and all reads fail-closed (treat as disabled).
+
+---
+
 ## Anti-patterns
 
 **Correlated subqueries in Drizzle `sql<>` templates** — `${column}` in a subquery emits a bound parameter, not a column reference. All aggregations use `LEFT JOIN` + `GROUP BY`. (See ADR-008, bugs.md BUG-003)

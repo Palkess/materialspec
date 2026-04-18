@@ -44,12 +44,13 @@ Hono app
 └── ALL  /trpc/*                       — tRPC batch endpoint
 
 tRPC router (src/trpc/router.ts)
-├── auth.*     — signup, login, logout, me, changePassword, changeLocale,
-│                consumeResetToken
+├── auth.*     — getPublicSettings, signup, login, logout, me, changePassword,
+│                changeLocale, consumeResetToken
 ├── specs.*    — list, get, create, update, softDelete, duplicate
 └── admin.*
-    ├── users.*  — list, setAdmin, generateResetLink
-    └── specs.*  — listByUser, reassignOwner
+    ├── users.*    — list, setAdmin, generateResetLink
+    ├── specs.*    — listByUser, reassignOwner
+    └── settings.* — getAll, setSignupEnabled
 ```
 
 **Procedure tiers:**
@@ -74,6 +75,7 @@ Schema in `apps/api/src/db/schema.ts`. Table names are singular (Drizzle convent
 | `password_reset_token` | userId, hashedToken (sha256), expiresAt, usedAt     |
 | `specification`      | userId, name, description, responsiblePerson, deletedAt |
 | `item`               | specificationId, sortOrder, name, unit, quantity, pricePerUnit, taxRate |
+| `app_setting`        | key (PK), value (jsonb), updatedAt, updatedBy (FK user.id) |
 
 **Drizzle maps `numeric` columns to TypeScript `string`.** Never do arithmetic on these strings directly — use `decimal.js` via the `money.ts` helpers.
 
@@ -100,7 +102,8 @@ src/pages/
 │   │   ├── index.astro          — protected (spec list)
 │   │   ├── new.astro            — protected (new spec editor)
 │   │   └── [id]/edit.astro      — protected (edit spec)
-│   └── admin/users.astro        — admin only
+│   ├── admin/users.astro        — admin only
+│   └── admin/settings.astro    — admin only
 └── en/  (mirror of sv/)
 ```
 
@@ -114,7 +117,7 @@ src/pages/
 
 Single source of truth for:
 - **Zod schemas** (`src/schemas.ts`) — used by both tRPC `.input()` and React `zodResolver`
-- **Domain constants** (`src/constants.ts`) — `VAT_RATES`, `UNITS`
+- **Domain constants** (`src/constants.ts`) — `VAT_RATES`, `UNITS`, `unitLabel(unit, locale)`
 - **Money utilities** (`src/money.ts`) — `lineTotal`, `grandTotals`, `roundForDisplay`
 - **i18n JSON** (`i18n/{sv,en}/*.json`) — 6 namespaces: common, auth, specs, errors, export, admin
 

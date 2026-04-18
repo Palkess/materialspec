@@ -95,6 +95,8 @@ app.get("/specs/:id/export.pdf", handler)
 
 **We used `@astrojs/node` v10 with Astro v5 — v10 imports `sessionDrivers` from `astro/config` which doesn't exist in Astro v5, causing a boot crash. Do not upgrade `@astrojs/node` past v9.x until Astro is also upgraded to v6.**
 
+**In E2E tests, direct tRPC POST requests must send the input as raw JSON — not wrapped in `{"json": input}`.** tRPC v11 `httpBatchLink` without a transformer sends mutations with the raw object as the body (e.g. `{"email":"...","name":"...","password":"..."}`). The `{"json": ...}` wrapper is a tRPC v10 artefact; using it in v11 causes Zod input parsing to fail with `BAD_REQUEST` before the handler is reached. Use `page.evaluate(() => fetch(..., { body: JSON.stringify(rawInput) }))` from within the browser context rather than Playwright's `request` API to ensure CORS and serialization match what the tRPC client sends.
+
 ---
 
 ## How to contribute to this file
