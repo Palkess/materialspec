@@ -1,4 +1,4 @@
-export { VAT_RATES, UNITS } from "./constants.js";
+export { VAT_RATES, UNITS, unitLabel } from "./constants.js";
 export type { VatRate, Unit } from "./constants.js";
 
 export {

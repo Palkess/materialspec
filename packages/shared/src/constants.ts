@@ -14,3 +14,10 @@ export const UNITS = [
   "h",
 ] as const;
 export type Unit = (typeof UNITS)[number];
+
+const UNIT_LABELS_SV: Partial<Record<Unit, string>> = { pcs: "st" };
+
+export function unitLabel(unit: string, lang: "sv" | "en"): string {
+  if (lang === "sv") return UNIT_LABELS_SV[unit as Unit] ?? unit;
+  return unit;
+}

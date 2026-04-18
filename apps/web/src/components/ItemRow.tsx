@@ -125,6 +125,7 @@ export default function ItemRow({
         <UnitSelect
           value={useWatch({ control, name: `items.${index}.unit` }) || "pcs"}
           onChange={(v) => setValue(`items.${index}.unit`, v)}
+          lang={lang}
           className="w-full text-sm"
         />
       </td>

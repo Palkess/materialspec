@@ -1,6 +1,6 @@
 import ExcelJS from "exceljs";
 import Decimal from "decimal.js";
-import { lineTotal, grandTotals, roundForDisplay } from "@materialspec/shared";
+import { lineTotal, grandTotals, roundForDisplay, unitLabel } from "@materialspec/shared";
 
 import svExport from "@materialspec/shared/i18n/sv/export.json" with { type: "json" };
 import enExport from "@materialspec/shared/i18n/en/export.json" with { type: "json" };
@@ -83,7 +83,7 @@ export async function renderXlsx(
     ws.addRow([
       item.name,
       item.description,
-      item.unit,
+      unitLabel(item.unit, lang),
       fmtNum(item.quantity, lang),
       fmtCurrency(roundForDisplay(new Decimal(item.pricePerUnit)), lang),
       `${(parseFloat(item.taxRate) * 100).toFixed(0)} %`,
