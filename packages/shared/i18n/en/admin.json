@@ -1,5 +1,13 @@
 {
   "title": "Users",
+  "settings": {
+    "title": "Settings",
+    "signupEnabled": {
+      "label": "Allow creation of accounts",
+      "description": "Allow new users to register via the login page."
+    },
+    "saved": "Setting saved"
+  },
   "email": "Email",
   "name": "Name",
   "role": "Role",

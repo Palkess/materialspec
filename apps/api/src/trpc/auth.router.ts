@@ -1,11 +1,12 @@
 import { z } from "zod";
 import { createHash } from "node:crypto";
 import { hash, verify } from "@node-rs/argon2";
+import { TRPCError } from "@trpc/server";
 import { eq, and, isNull, gt } from "drizzle-orm";
 import { router, publicProcedure, protectedProcedure } from "./trpc.js";
 import { lucia } from "../auth/lucia.js";
 import { db } from "../db/index.js";
-import { users, passwordResetTokens } from "../db/schema.js";
+import { users, passwordResetTokens, appSettings } from "../db/schema.js";
 
 const argon2Options = {
   memoryCost: 19456,
@@ -15,6 +16,15 @@ const argon2Options = {
 };
 
 export const authRouter = router({
+  getPublicSettings: publicProcedure.query(async () => {
+    const [row] = await db
+      .select()
+      .from(appSettings)
+      .where(eq(appSettings.key, "signupEnabled"))
+      .limit(1);
+    return { signupEnabled: row?.value === true };
+  }),
+
   signup: publicProcedure
     .input(
       z.object({
@@ -24,6 +34,19 @@ export const authRouter = router({
       })
     )
     .mutation(async ({ input, ctx }) => {
+      const [settingRow] = await db
+        .select()
+        .from(appSettings)
+        .where(eq(appSettings.key, "signupEnabled"))
+        .limit(1);
+
+      if (settingRow?.value !== true) {
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "errors.auth.signupDisabled",
+        });
+      }
+
       const existing = await db
         .select()
         .from(users)

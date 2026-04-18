@@ -23,11 +23,17 @@ function SignupFormInner({ lang }: Props) {
   const { t: tErrors } = useTranslation("errors");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [settingsLoading, setSettingsLoading] = useState(true);
+  const [signupEnabled, setSignupEnabled] = useState(true);
 
   useEffect(() => {
     trpc.auth.me.query().then(() => {
       window.location.href = `/${lang}/specs`;
     }).catch(() => {/* not authenticated, stay on signup */});
+    trpc.auth.getPublicSettings.query()
+      .then((s) => setSignupEnabled(s.signupEnabled))
+      .catch(() => setSignupEnabled(false))
+      .finally(() => setSettingsLoading(false));
   }, [lang]);
 
   const {
@@ -53,6 +59,31 @@ function SignupFormInner({ lang }: Props) {
       setLoading(false);
     }
   };
+
+  if (settingsLoading) {
+    return (
+      <div className="w-full max-w-md mx-auto bg-concrete-900 border border-concrete-800 rounded-lg p-8">
+        <p className="text-neutral-400 text-center">{" "}</p>
+      </div>
+    );
+  }
+
+  if (!signupEnabled) {
+    return (
+      <div className="w-full max-w-md mx-auto bg-concrete-900 border border-concrete-800 rounded-lg p-8">
+        <h1 className="text-3xl font-bold text-white mb-4 tracking-tight">
+          {t("signup.disabled.title")}
+        </h1>
+        <p className="text-neutral-400 mb-6">{t("signup.disabled.body")}</p>
+        <a
+          href={`/${lang}/login`}
+          className="text-safety-500 hover:text-safety-400 font-bold underline underline-offset-2"
+        >
+          {t("signup.login")}
+        </a>
+      </div>
+    );
+  }
 
   return (
     <div className="w-full max-w-md mx-auto bg-concrete-900 border border-concrete-800 rounded-lg p-8">

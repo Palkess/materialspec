@@ -1,5 +1,13 @@
 {
   "title": "Användare",
+  "settings": {
+    "title": "Inställningar",
+    "signupEnabled": {
+      "label": "Tillåt skapande av konto",
+      "description": "Tillåt nya användare att registrera sig via inloggningssidan."
+    },
+    "saved": "Inställningen har sparats"
+  },
   "email": "E-post",
   "name": "Namn",
   "role": "Roll",

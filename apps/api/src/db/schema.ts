@@ -7,6 +7,7 @@ import {
   timestamp,
   integer,
   numeric,
+  jsonb,
   pgEnum,
 } from "drizzle-orm/pg-core";
 
@@ -63,6 +64,14 @@ export const specifications = pgTable("specification", {
     .notNull()
     .defaultNow(),
   deletedAt: timestamp("deleted_at", { withTimezone: true }),
+});
+
+// ─── App Settings ────────────────────────────────────────────
+export const appSettings = pgTable("app_setting", {
+  key: text("key").primaryKey(),
+  value: jsonb("value").notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  updatedBy: uuid("updated_by").references(() => users.id),
 });
 
 // ─── Item ────────────────────────────────────────────────────

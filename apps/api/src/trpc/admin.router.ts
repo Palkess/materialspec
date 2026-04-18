@@ -5,8 +5,10 @@ import { eq, and, isNull, sql } from "drizzle-orm";
 import { router, adminProcedure } from "./trpc.js";
 import { db } from "../db/index.js";
 import { users, passwordResetTokens, specifications } from "../db/schema.js";
+import { settingsAdminRouter } from "./admin.settings.router.js";
 
 export const adminRouter = router({
+  settings: settingsAdminRouter,
   users: router({
     list: adminProcedure.query(async () => {
       return db

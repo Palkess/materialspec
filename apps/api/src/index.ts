@@ -6,6 +6,7 @@ import { appRouter } from "./trpc/router.js";
 import { createContext } from "./trpc/context.js";
 import { runMigrations } from "./db/migrate.js";
 import { seedAdmin } from "./auth/seed.js";
+import { seedAppSettings } from "./auth/seedAppSettings.js";
 import { renderXlsx } from "./export/xlsx.js";
 import { renderPdf } from "./export/pdf.js";
 import { lucia } from "./auth/lucia.js";
@@ -108,6 +109,7 @@ async function main() {
   }
 
   await seedAdmin();
+  await seedAppSettings();
 
   console.log(`API server starting on ${host}:${port}`);
   serve({ fetch: app.fetch, port, hostname: host });

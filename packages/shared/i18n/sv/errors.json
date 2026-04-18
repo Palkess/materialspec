@@ -3,7 +3,8 @@
     "emailTaken": "E-postadressen är redan registrerad",
     "invalidCredentials": "Felaktig e-post eller lösenord",
     "unauthorized": "Du måste logga in",
-    "forbidden": "Du har inte behörighet"
+    "forbidden": "Du har inte behörighet",
+    "signupDisabled": "Registrering är för närvarande inaktiverad."
   },
   "spec": {
     "notFound": "Specifikationen hittades inte",

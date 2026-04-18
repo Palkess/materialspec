@@ -5,6 +5,7 @@ interface AuthUser {
   name: string;
   email: string;
   locale: string;
+  isAdmin: boolean;
 }
 
 interface AuthGuardResult {

@@ -22,11 +22,13 @@ function LoginFormInner({ lang }: Props) {
   const { t: tErrors } = useTranslation("errors");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [signupEnabled, setSignupEnabled] = useState(false);
 
   useEffect(() => {
     trpc.auth.me.query().then(() => {
       window.location.href = `/${lang}/specs`;
     }).catch(() => {/* not authenticated, stay on login */});
+    trpc.auth.getPublicSettings.query().then((s) => setSignupEnabled(s.signupEnabled)).catch(() => {});
   }, [lang]);
 
   const {
@@ -112,15 +114,17 @@ function LoginFormInner({ lang }: Props) {
         </button>
       </form>
 
-      <p className="text-neutral-400 text-center mt-6">
-        {t("login.noAccount")}{" "}
-        <a
-          href={`/${lang}/signup`}
-          className="text-safety-500 hover:text-safety-400 font-bold underline underline-offset-2"
-        >
-          {t("login.signup")}
-        </a>
-      </p>
+      {signupEnabled && (
+        <p className="text-neutral-400 text-center mt-6">
+          {t("login.noAccount")}{" "}
+          <a
+            href={`/${lang}/signup`}
+            className="text-safety-500 hover:text-safety-400 font-bold underline underline-offset-2"
+          >
+            {t("login.signup")}
+          </a>
+        </p>
+      )}
     </div>
   );
 }

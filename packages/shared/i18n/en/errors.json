@@ -3,7 +3,8 @@
     "emailTaken": "Email address is already registered",
     "invalidCredentials": "Invalid email or password",
     "unauthorized": "You must be logged in",
-    "forbidden": "You don't have permission"
+    "forbidden": "You don't have permission",
+    "signupDisabled": "Registration is currently disabled."
   },
   "spec": {
     "notFound": "Specification not found",

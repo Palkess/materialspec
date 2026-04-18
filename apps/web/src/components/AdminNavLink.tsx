@@ -8,7 +8,7 @@ interface Props {
 }
 
 function AdminNavLinkInner({ lang }: Props) {
-  const { t } = useTranslation("common");
+  const { t: tAdmin } = useTranslation("admin");
   const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
@@ -20,12 +20,20 @@ function AdminNavLinkInner({ lang }: Props) {
   if (!isAdmin) return null;
 
   return (
-    <a
-      href={`/${lang}/admin/users`}
-      className="text-sm px-3 py-2 rounded text-neutral-200 hover:bg-concrete-800 hover:text-white font-bold uppercase tracking-wide transition-colors"
-    >
-      {t("admin")}
-    </a>
+    <>
+      <a
+        href={`/${lang}/admin/users`}
+        className="text-sm px-3 py-2 rounded text-neutral-200 hover:bg-concrete-800 hover:text-white font-bold uppercase tracking-wide transition-colors"
+      >
+        {tAdmin("title")}
+      </a>
+      <a
+        href={`/${lang}/admin/settings`}
+        className="text-sm px-3 py-2 rounded text-neutral-200 hover:bg-concrete-800 hover:text-white font-bold uppercase tracking-wide transition-colors"
+      >
+        {tAdmin("settings.title")}
+      </a>
+    </>
   );
 }
 
