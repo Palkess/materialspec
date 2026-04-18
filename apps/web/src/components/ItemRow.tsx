@@ -115,9 +115,11 @@ export default function ItemRow({
         />
       </td>
       <td className="px-1 py-2.5">
-        <VatSelect
-          value={taxRate}
-          onChange={(v) => setValue(`items.${index}.taxRate`, v)}
+        <NumberInput
+          value={quantity}
+          onChange={(v) => setValue(`items.${index}.quantity`, v)}
+          lang={lang}
+          decimals={3}
           className="w-full text-sm"
         />
       </td>
@@ -130,11 +132,9 @@ export default function ItemRow({
         />
       </td>
       <td className="px-1 py-2.5">
-        <NumberInput
-          value={quantity}
-          onChange={(v) => setValue(`items.${index}.quantity`, v)}
-          lang={lang}
-          decimals={3}
+        <VatSelect
+          value={taxRate}
+          onChange={(v) => setValue(`items.${index}.taxRate`, v)}
           className="w-full text-sm"
         />
       </td>

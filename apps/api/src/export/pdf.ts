@@ -38,8 +38,8 @@ const R = 545;          // right margin
 const ROW_H = 16;       // row height (px)
 const LINE_GAP = 4;     // gap between line and text
 
-// Column x-positions: Name | Unit | Qty | Price | VAT% | Tax | Total
-const COLS = [50, 195, 240, 295, 365, 415, 475];
+// Column x-positions: Name | Qty | Unit | VAT% | Price | Tax | Total
+const COLS = [50, 195, 240, 295, 345, 415, 475];
 
 export async function renderPdf(
   spec: ExportSpec,
@@ -71,10 +71,10 @@ export async function renderPdf(
     // ── Table header row ──────────────────────────────────────
     const headers = [
       t.columns.name,
-      t.columns.unit,
       t.columns.quantity,
-      t.columns.pricePerUnit,
+      t.columns.unit,
       t.columns.vatRate,
+      t.columns.pricePerUnit,
       t.columns.tax,
       t.columns.total,
     ];
@@ -89,7 +89,7 @@ export async function renderPdf(
     doc.fontSize(8).font("Helvetica-Bold");
     headers.forEach((h, i) => {
       const colW = (COLS[i + 1] ?? R) - COLS[i] - 3;
-      const align = i >= 2 ? "right" : "left";
+      const align = i === 0 || i === 2 ? "left" : "right";
       doc.text(h, COLS[i], y, { width: colW, align, lineBreak: false });
     });
     y += ROW_H;
@@ -104,17 +104,17 @@ export async function renderPdf(
       const line = lineTotal(item);
       const cells = [
         item.name,
-        unitLabel(item.unit, lang),
         fmtNum(item.quantity, lang),
-        fmtCurrency(roundForDisplay(new Decimal(item.pricePerUnit)), lang),
+        unitLabel(item.unit, lang),
         `${(parseFloat(item.taxRate) * 100).toFixed(0)} %`,
+        fmtCurrency(roundForDisplay(new Decimal(item.pricePerUnit)), lang),
         fmtCurrency(roundForDisplay(line.tax), lang),
         fmtCurrency(roundForDisplay(line.gross), lang),
       ];
 
       cells.forEach((cell, i) => {
         const colW = (COLS[i + 1] ?? R) - COLS[i] - 3;
-        const align = i >= 2 ? "right" : "left";
+        const align = i === 0 || i === 2 ? "left" : "right";
         doc.text(cell, COLS[i], y, { width: colW, align, lineBreak: false });
       });
       y += ROW_H;

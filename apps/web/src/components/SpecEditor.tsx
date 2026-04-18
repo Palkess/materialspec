@@ -352,14 +352,14 @@ function SpecEditorInner({ lang, specId, userName }: Props) {
                 <th className="px-1 py-3 text-left text-xs font-bold text-neutral-400 uppercase tracking-wider hidden lg:table-cell">
                   {t("editor.item.description")}
                 </th>
-                <th className="px-1 py-3 text-left text-xs font-bold text-neutral-400 uppercase tracking-wider">
-                  {t("editor.item.vatRate")}
+                <th className="px-1 py-3 text-right text-xs font-bold text-neutral-400 uppercase tracking-wider">
+                  {t("editor.item.quantity")}
                 </th>
                 <th className="px-1 py-3 text-left text-xs font-bold text-neutral-400 uppercase tracking-wider">
                   {t("editor.item.unit")}
                 </th>
-                <th className="px-1 py-3 text-right text-xs font-bold text-neutral-400 uppercase tracking-wider">
-                  {t("editor.item.quantity")}
+                <th className="px-1 py-3 text-left text-xs font-bold text-neutral-400 uppercase tracking-wider">
+                  {t("editor.item.vatRate")}
                 </th>
                 <th className="px-1 py-3 text-right text-xs font-bold text-neutral-400 uppercase tracking-wider">
                   {t("editor.item.pricePerUnit")}

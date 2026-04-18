@@ -60,10 +60,10 @@ export async function renderXlsx(
   const headerRow = ws.addRow([
     t.columns.name,
     t.columns.description,
-    t.columns.unit,
     t.columns.quantity,
-    t.columns.pricePerUnit,
+    t.columns.unit,
     t.columns.vatRate,
+    t.columns.pricePerUnit,
     t.columns.tax,
     t.columns.total,
   ]);
@@ -83,10 +83,10 @@ export async function renderXlsx(
     ws.addRow([
       item.name,
       item.description,
-      unitLabel(item.unit, lang),
       fmtNum(item.quantity, lang),
-      fmtCurrency(roundForDisplay(new Decimal(item.pricePerUnit)), lang),
+      unitLabel(item.unit, lang),
       `${(parseFloat(item.taxRate) * 100).toFixed(0)} %`,
+      fmtCurrency(roundForDisplay(new Decimal(item.pricePerUnit)), lang),
       fmtCurrency(roundForDisplay(line.tax), lang),
       fmtCurrency(roundForDisplay(line.gross), lang),
     ]);
