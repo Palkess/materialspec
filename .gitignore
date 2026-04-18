@@ -6,3 +6,4 @@ dist/
 .astro/
 apps/web/playwright-report/
 apps/web/test-results/
+test-results/
