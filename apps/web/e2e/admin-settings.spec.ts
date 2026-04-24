@@ -1,6 +1,6 @@
 import { test, expect } from "@playwright/test";
 
-const API_URL = process.env.E2E_API_URL || process.env.PUBLIC_API_URL || "http://localhost:3001";
+const API_URL = process.env.E2E_API_URL || process.env.PUBLIC_API_URL || "http://localhost:3721";
 
 async function loginAsAdmin(page: Parameters<typeof test>[1] extends (args: { page: infer P }) => unknown ? P : never) {
   const adminEmail = process.env.E2E_ADMIN_EMAIL || process.env.ADMIN_EMAIL || "admin@materialspec.test";

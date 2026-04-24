@@ -1,9 +1,17 @@
 import { test, expect } from "@playwright/test";
+import { deleteTestUsers } from "./helpers";
+
+const createdEmails: string[] = [];
 
 test.describe("Spec list and editor", () => {
+  test.afterAll(async () => {
+    await deleteTestUsers(createdEmails);
+  });
+
   test.beforeEach(async ({ page }) => {
     // Create a fresh user and login
     const email = `spec-${Date.now()}@example.com`;
+    createdEmails.push(email);
     await page.goto("/sv/signup");
     await page.fill('input[type="text"]', "Spec Tester");
     await page.fill('input[type="email"]', email);

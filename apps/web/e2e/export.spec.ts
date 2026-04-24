@@ -1,6 +1,9 @@
 import { test, expect } from "@playwright/test";
+import { deleteTestUsers } from "./helpers";
 
-const API_URL = process.env.E2E_API_URL || "http://localhost:3001";
+const API_URL = process.env.E2E_API_URL || "http://localhost:3721";
+
+const createdEmails: string[] = [];
 
 async function signupAndCreateSpec(page: Parameters<typeof test>[1] extends (args: { page: infer P }) => unknown ? P : never) {
   const email = `export-${Date.now()}@example.com`;
@@ -19,12 +22,17 @@ async function signupAndCreateSpec(page: Parameters<typeof test>[1] extends (arg
 
   const url = page.url();
   const specId = url.match(/\/specs\/([^/]+)\/edit/)?.[1];
-  return { specId };
+  return { specId, email };
 }
 
 test.describe("Export", () => {
+  test.afterAll(async () => {
+    await deleteTestUsers(createdEmails);
+  });
+
   test("export xlsx downloads with correct MIME type and non-empty content", async ({ page }) => {
-    await signupAndCreateSpec(page);
+    const { email } = await signupAndCreateSpec(page);
+    createdEmails.push(email);
 
     // The export button should be visible after save
     const [download] = await Promise.all([
@@ -38,7 +46,8 @@ test.describe("Export", () => {
   });
 
   test("export pdf downloads with correct MIME type and non-empty content", async ({ page }) => {
-    await signupAndCreateSpec(page);
+    const { email } = await signupAndCreateSpec(page);
+    createdEmails.push(email);
 
     const [download] = await Promise.all([
       page.waitForEvent("download"),
@@ -53,6 +62,7 @@ test.describe("Export", () => {
   test("non-owner cannot access another user's export (403)", async ({ page }) => {
     // Create owner and spec
     const ownerEmail = `owner-${Date.now()}@example.com`;
+    createdEmails.push(ownerEmail);
     await page.goto("/sv/signup");
     await page.fill('input[autocomplete="name"]', "Owner");
     await page.fill('input[type="email"]', ownerEmail);
@@ -76,6 +86,7 @@ test.describe("Export", () => {
 
     // Sign up as a different user
     const otherEmail = `other-${Date.now()}@example.com`;
+    createdEmails.push(otherEmail);
     await page.goto("/sv/signup");
     await page.fill('input[autocomplete="name"]', "Other User");
     await page.fill('input[type="email"]', otherEmail);

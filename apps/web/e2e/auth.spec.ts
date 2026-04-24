@@ -1,13 +1,21 @@
 import { test, expect } from "@playwright/test";
+import { deleteTestUsers } from "./helpers";
+
+const createdEmails: string[] = [];
 
 test.describe("Authentication", () => {
+  test.afterAll(async () => {
+    await deleteTestUsers(createdEmails);
+  });
+
   test("signup flow creates account and redirects to specs", async ({
     page,
   }) => {
     await page.goto("/sv/signup");
-    await expect(page.locator("h1")).toContainText("Skapa konto");
+    await expect(page.getByRole("heading", { name: "Skapa konto" })).toBeVisible();
 
     const email = `signup-${Date.now()}@example.com`;
+    createdEmails.push(email);
     await page.fill('input[type="text"]', "Test User");
     await page.fill('input[type="email"]', email);
     await page.fill('input[type="password"]', "password123");
@@ -20,6 +28,7 @@ test.describe("Authentication", () => {
   test("login flow with valid credentials", async ({ page }) => {
     // First create a user via signup
     const email = `login-${Date.now()}@example.com`;
+    createdEmails.push(email);
     await page.goto("/sv/signup");
     await page.fill('input[type="text"]', "Login Test");
     await page.fill('input[type="email"]', email);
@@ -68,6 +77,7 @@ test.describe("Authentication", () => {
   test("logout redirects to login", async ({ page }) => {
     // Sign up first
     const email = `logout-${Date.now()}@example.com`;
+    createdEmails.push(email);
     await page.goto("/sv/signup");
     await page.fill('input[autocomplete="name"]', "Logout Tester");
     await page.fill('input[type="email"]', email);

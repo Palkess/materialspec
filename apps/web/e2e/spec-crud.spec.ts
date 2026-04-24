@@ -1,5 +1,7 @@
 import { test, expect } from "@playwright/test";
-import { createTestUser } from "./helpers";
+import { deleteTestUsers } from "./helpers";
+
+const createdEmails: string[] = [];
 
 /**
  * Helper: sign up a fresh user via UI and land on /sv/specs.
@@ -16,8 +18,12 @@ async function signupAndLand(page: Parameters<typeof test>[1] extends (args: { p
 }
 
 test.describe("Spec CRUD", () => {
+  test.afterAll(async () => {
+    await deleteTestUsers(createdEmails);
+  });
+
   test("create spec with 3 items, save, redirects to edit, appears in list", async ({ page }) => {
-    await signupAndLand(page);
+    createdEmails.push(await signupAndLand(page));
 
     // Navigate to new spec
     await page.goto("/sv/specs/new");
@@ -51,7 +57,7 @@ test.describe("Spec CRUD", () => {
   });
 
   test("edit existing spec changes updatedAt", async ({ page }) => {
-    await signupAndLand(page);
+    createdEmails.push(await signupAndLand(page));
 
     // Create a spec
     await page.goto("/sv/specs/new");
@@ -80,7 +86,7 @@ test.describe("Spec CRUD", () => {
   });
 
   test("duplicate spec shows kopia suffix", async ({ page }) => {
-    await signupAndLand(page);
+    createdEmails.push(await signupAndLand(page));
 
     // Create a spec
     await page.goto("/sv/specs/new");
@@ -103,7 +109,7 @@ test.describe("Spec CRUD", () => {
   });
 
   test("adding an empty row and saving once clears the unsaved-changes indicator", async ({ page }) => {
-    await signupAndLand(page);
+    createdEmails.push(await signupAndLand(page));
 
     // Create a spec with one named item so we have something to edit
     await page.goto("/sv/specs/new");
@@ -149,7 +155,7 @@ test.describe("Spec CRUD", () => {
   });
 
   test("soft delete removes spec from list", async ({ page }) => {
-    await signupAndLand(page);
+    createdEmails.push(await signupAndLand(page));
 
     // Create a spec
     await page.goto("/sv/specs/new");

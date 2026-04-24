@@ -1,6 +1,9 @@
 import { test, expect } from "@playwright/test";
+import { deleteTestUsers } from "./helpers";
 
-const API_URL = process.env.E2E_API_URL || "http://localhost:3001";
+const API_URL = process.env.E2E_API_URL || "http://localhost:3721";
+
+const createdEmails: string[] = [];
 
 /**
  * Sign up and return email. Lands on /sv/specs.
@@ -23,8 +26,8 @@ async function signup(
  * Login as the seeded admin (ADMIN_EMAIL / ADMIN_INITIAL_PASSWORD from env).
  */
 async function loginAsAdmin(page: Parameters<typeof test>[1] extends (args: { page: infer P }) => unknown ? P : never) {
-  const adminEmail = process.env.E2E_ADMIN_EMAIL || "admin@materialspec.test";
-  const adminPassword = process.env.E2E_ADMIN_PASSWORD || "adminpassword";
+  const adminEmail = process.env.E2E_ADMIN_EMAIL || process.env.ADMIN_EMAIL || "admin@materialspec.test";
+  const adminPassword = process.env.E2E_ADMIN_PASSWORD || process.env.ADMIN_INITIAL_PASSWORD || "adminpassword";
 
   await page.goto("/sv/login");
   await page.fill('input[type="email"]', adminEmail);
@@ -34,11 +37,16 @@ async function loginAsAdmin(page: Parameters<typeof test>[1] extends (args: { pa
 }
 
 test.describe("Admin", () => {
+  test.afterAll(async () => {
+    await deleteTestUsers(createdEmails);
+  });
+
   test("admin generates reset link, user consumes it and logs in with new password", async ({
     page,
   }) => {
     // Create a target user
     const targetEmail = await signup(page, "Reset Target");
+    createdEmails.push(targetEmail);
 
     // Log out
     await page.goto("/sv/account");
@@ -89,6 +97,7 @@ test.describe("Admin", () => {
 
   test("admin promotes user to admin", async ({ page }) => {
     const targetEmail = await signup(page, "Promote Me");
+    createdEmails.push(targetEmail);
 
     // Log out
     await page.goto("/sv/account");
@@ -113,7 +122,7 @@ test.describe("Admin", () => {
     await page.goto("/sv/admin/users");
     await page.waitForTimeout(1000);
 
-    const adminEmail = process.env.E2E_ADMIN_EMAIL || "admin@materialspec.test";
+    const adminEmail = process.env.E2E_ADMIN_EMAIL || process.env.ADMIN_EMAIL || "admin@materialspec.test";
 
     // Establish precondition: the seeded admin must be the only admin.
     // Earlier tests in this file may have promoted other users — demote them first.

@@ -1,6 +1,6 @@
 import { hash } from "@node-rs/argon2";
 
-const API_URL = process.env.E2E_API_URL || "http://localhost:3001";
+const API_URL = process.env.E2E_API_URL || "http://localhost:3721";
 
 const argon2Options = {
   memoryCost: 19456,
@@ -54,4 +54,42 @@ export async function loginUser(
   });
 
   return response.headers.get("set-cookie") || "";
+}
+
+/**
+ * Delete test users by email after a test run.
+ * Logs in as the seeded admin, resolves emails to IDs, then deletes them.
+ * Skips gracefully if users no longer exist.
+ */
+export async function deleteTestUsers(emails: string[]): Promise<void> {
+  if (emails.length === 0) return;
+
+  const adminEmail =
+    process.env.E2E_ADMIN_EMAIL || process.env.ADMIN_EMAIL || "admin@materialspec.test";
+  const adminPassword =
+    process.env.E2E_ADMIN_PASSWORD || process.env.ADMIN_INITIAL_PASSWORD || "adminpassword";
+
+  const adminCookie = await loginUser(adminEmail, adminPassword);
+
+  const listInput = encodeURIComponent(JSON.stringify({ "0": {} }));
+  const listRes = await fetch(
+    `${API_URL}/trpc/admin.users.list?batch=1&input=${listInput}`,
+    { headers: { Cookie: adminCookie } }
+  );
+  const listData = (await listRes.json()) as Array<{
+    result: { data: Array<{ id: string; email: string }> };
+  }>;
+  const allUsers = listData[0]?.result?.data ?? [];
+
+  const targetIds = allUsers
+    .filter((u) => emails.includes(u.email))
+    .map((u) => u.id);
+
+  if (targetIds.length === 0) return;
+
+  await fetch(`${API_URL}/trpc/admin.users.delete?batch=1`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", Cookie: adminCookie },
+    body: JSON.stringify({ "0": { userIds: targetIds } }),
+  });
 }
