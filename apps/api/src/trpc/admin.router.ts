@@ -1,10 +1,10 @@
 import { z } from "zod";
 import { TRPCError } from "@trpc/server";
 import { randomBytes, createHash } from "node:crypto";
-import { eq, and, isNull, sql } from "drizzle-orm";
+import { eq, and, isNull, sql, inArray } from "drizzle-orm";
 import { router, adminProcedure } from "./trpc.js";
 import { db } from "../db/index.js";
-import { users, passwordResetTokens, specifications } from "../db/schema.js";
+import { users, sessions, passwordResetTokens, specifications, appSettings } from "../db/schema.js";
 import { settingsAdminRouter } from "./admin.settings.router.js";
 
 export const adminRouter = router({
@@ -52,6 +52,62 @@ export const adminRouter = router({
             .where(eq(users.id, input.userId));
 
           return { success: true };
+        });
+      }),
+
+    delete: adminProcedure
+      .input(z.object({ userIds: z.array(z.string().uuid()).min(1) }))
+      .mutation(async ({ input, ctx }) => {
+        if (input.userIds.includes(ctx.user.id)) {
+          throw new TRPCError({
+            code: "BAD_REQUEST",
+            message: "errors.admin.cannotDeleteSelf",
+          });
+        }
+
+        return db.transaction(async (tx) => {
+          const toDelete = await tx
+            .select({ isAdmin: users.isAdmin })
+            .from(users)
+            .where(inArray(users.id, input.userIds));
+
+          const deletingAdminCount = toDelete.filter((u) => u.isAdmin).length;
+          if (deletingAdminCount > 0) {
+            const [{ total }] = await tx
+              .select({ total: sql<number>`count(*)::int` })
+              .from(users)
+              .where(eq(users.isAdmin, true));
+            if (total - deletingAdminCount < 1) {
+              throw new TRPCError({
+                code: "BAD_REQUEST",
+                message: "errors.admin.lastAdmin",
+              });
+            }
+          }
+
+          await tx.delete(sessions).where(inArray(sessions.userId, input.userIds));
+          await tx.delete(passwordResetTokens).where(inArray(passwordResetTokens.userId, input.userIds));
+
+          const userSpecs = await tx
+            .select({ id: specifications.id })
+            .from(specifications)
+            .where(inArray(specifications.userId, input.userIds));
+
+          if (userSpecs.length > 0) {
+            await tx
+              .delete(specifications)
+              .where(inArray(specifications.id, userSpecs.map((s) => s.id)));
+          }
+
+          // Clear FK reference before deleting users; NULL values are unaffected by inArray
+          await tx
+            .update(appSettings)
+            .set({ updatedBy: null })
+            .where(inArray(appSettings.updatedBy, input.userIds));
+
+          await tx.delete(users).where(inArray(users.id, input.userIds));
+
+          return { count: input.userIds.length };
         });
       }),
 

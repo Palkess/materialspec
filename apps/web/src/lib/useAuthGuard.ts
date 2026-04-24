@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { trpc } from "./trpc";
 
 interface AuthUser {
+  id: string;
   name: string;
   email: string;
   locale: string;

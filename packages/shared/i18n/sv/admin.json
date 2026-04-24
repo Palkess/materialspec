@@ -27,5 +27,10 @@
   "reassigned": "Flyttad!",
   "selectAll": "Markera alla",
   "deselectAll": "Avmarkera alla",
-  "hideSpecs": "Dölj"
+  "hideSpecs": "Dölj",
+  "deleteUser": "Ta bort användare",
+  "deleteUsers": "Ta bort {{count}} användare",
+  "confirmDeleteOne": "Är du säker? Alla specifikationer för {{name}} tas bort permanent.",
+  "confirmDeleteMany": "Är du säker? Alla specifikationer för {{count}} användare tas bort permanent.",
+  "cannotDeleteSelf": "Du kan inte ta bort ditt eget konto"
 }
