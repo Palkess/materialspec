@@ -1,11 +1,11 @@
 import type { Context as HonoContext } from "hono";
-import type { Session, User } from "lucia";
+import type { Session, User, CookieAttributes } from "lucia";
 import { lucia } from "../auth/lucia.js";
 
 export interface TRPCContext {
   session: Session | null;
   user: User | null;
-  setCookie: (name: string, value: string, attributes: Record<string, unknown>) => void;
+  setCookie: (name: string, value: string, attributes: CookieAttributes) => void;
   deleteCookie: (name: string) => void;
 }
 

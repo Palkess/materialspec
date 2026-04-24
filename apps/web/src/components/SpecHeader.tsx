@@ -1,12 +1,6 @@
 import { useTranslation } from "react-i18next";
 import type { UseFormRegister, FieldErrors } from "react-hook-form";
-
-interface SpecFormValues {
-  name: string;
-  description: string;
-  responsiblePerson: string;
-  items: unknown[];
-}
+import type { SpecFormValues } from "./SpecEditor";
 
 interface Props {
   register: UseFormRegister<SpecFormValues>;

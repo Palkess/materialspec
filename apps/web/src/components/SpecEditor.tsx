@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { flushSync } from "react-dom";
 import { useForm, useFieldArray, useWatch } from "react-hook-form";
+import type { Path } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { I18nextProvider, useTranslation } from "react-i18next";
 import {
@@ -28,39 +29,28 @@ import TotalsFooter from "./TotalsFooter";
 
 // Form schema allows empty item names — they are filtered out before save.
 // The API schemas enforce min(1) on item names after filtering.
+// No .default() on any field — defaults live in useForm({ defaultValues }) and emptyItem().
+// .default() creates an input/output type split that zodResolver can't bridge with useForm<T>.
 const specFormSchema = z.object({
   name: z.string().min(1, "Name is required").max(255),
-  description: z.string().max(2000).default(""),
-  responsiblePerson: z.string().max(255).default(""),
+  description: z.string().max(2000),
+  responsiblePerson: z.string().max(255),
   items: z.array(
     z.object({
       id: z.string().optional(),
-      name: z.string().max(255).default(""),
-      description: z.string().max(1000).default(""),
-      unit: z.enum(UNITS).default("pcs"),
-      quantity: z.string().default("0"),
-      pricePerUnit: z.string().default("0"),
+      name: z.string().max(255),
+      description: z.string().max(1000),
+      unit: z.enum(UNITS),
+      quantity: z.string(),
+      pricePerUnit: z.string(),
       // No refine here — Postgres returns "0.2500" etc. with trailing zeros.
       // Normalization happens in onSave before sending to the API.
-      taxRate: z.string().default("0.25"),
+      taxRate: z.string(),
     })
-  ).default([]),
+  ),
 });
 
-export interface SpecFormValues {
-  name: string;
-  description: string;
-  responsiblePerson: string;
-  items: Array<{
-    id?: string;
-    name: string;
-    description: string;
-    unit: string;
-    quantity: string;
-    pricePerUnit: string;
-    taxRate: string;
-  }>;
-}
+export type SpecFormValues = z.infer<typeof specFormSchema>;
 
 interface Props {
   lang: "sv" | "en";
@@ -71,7 +61,7 @@ interface Props {
 const emptyItem = () => ({
   name: "",
   description: "",
-  unit: "pcs",
+  unit: "pcs" as const,
   quantity: "0",
   pricePerUnit: "0",
   taxRate: "0.25",
@@ -135,12 +125,12 @@ function SpecEditorInner({ lang, specId, userName }: Props) {
       trpc.specs.get.query({ id: specId }).then((data) => {
         reset({
           name: data.name,
-          description: data.description,
-          responsiblePerson: data.responsiblePerson,
+          description: data.description ?? "",
+          responsiblePerson: data.responsiblePerson ?? "",
           items: data.items.map((item) => ({
             name: item.name,
-            description: item.description,
-            unit: item.unit,
+            description: item.description ?? "",
+            unit: item.unit as (typeof UNITS)[number],
             quantity: item.quantity.replace(/\.?0+$/, "") || "0",
             pricePerUnit: item.pricePerUnit.replace(/\.?0+$/, "") || "0",
             taxRate: parseFloat(item.taxRate).toString(),
@@ -389,7 +379,7 @@ function SpecEditorInner({ lang, specId, userName }: Props) {
                     onRemove={() => remove(index)}
                     onAppendRow={handleAppendRow}
                     setValue={(name, value) =>
-                      setValue(name as `items.${number}.${string}`, value, {
+                      setValue(name as unknown as Path<SpecFormValues>, value, {
                         shouldDirty: true,
                       })
                     }

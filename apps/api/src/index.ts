@@ -1,5 +1,5 @@
 import { serve } from "@hono/node-server";
-import { Hono } from "hono";
+import { Hono, type Context } from "hono";
 import { cors } from "hono/cors";
 import { fetchRequestHandler } from "@trpc/server/adapters/fetch";
 import { appRouter } from "./trpc/router.js";
@@ -30,7 +30,7 @@ app.get("/health", (c) => {
 
 // Export routes (plain GET, not tRPC)
 // Two explicit routes instead of /export.:ext — Hono 4 dot-param matching is unreliable.
-async function handleExport(c: Parameters<Parameters<typeof app.get>[1]>[0], ext: "xlsx" | "pdf") {
+async function handleExport(c: Context, ext: "xlsx" | "pdf") {
   const { id } = c.req.param();
 
   const cookieHeader = c.req.header("Cookie") ?? "";
