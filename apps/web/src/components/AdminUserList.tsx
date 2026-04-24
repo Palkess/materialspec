@@ -3,6 +3,7 @@ import { I18nextProvider, useTranslation } from "react-i18next";
 import { trpc } from "../lib/trpc";
 import { createI18n } from "../lib/i18n";
 import { useAuthGuard } from "../lib/useAuthGuard";
+import { usePopoverMenu } from "../lib/usePopoverMenu";
 
 interface User {
   id: string;
@@ -41,6 +42,9 @@ function AdminUserListInner({ lang }: Props) {
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
   const [bulkDeleteConfirm, setBulkDeleteConfirm] = useState(false);
   const [deleting, setDeleting] = useState(false);
+
+  const { openMenu, menuPos, triggerRef, popoverRef, toggleMenu, closeMenu } =
+    usePopoverMenu("data-user-menu");
 
   useEffect(() => {
     trpc.admin.users.list
@@ -190,6 +194,9 @@ function AdminUserListInner({ lang }: Props) {
     selectableUserIds.length > 0 &&
     selectableUserIds.every((id) => selectedUserIds.has(id));
 
+  const popoverUser = openMenu ? (users.find((u) => u.id === openMenu) ?? null) : null;
+  const deleteModalUser = deleteConfirmId ? (users.find((u) => u.id === deleteConfirmId) ?? null) : null;
+
   return (
     <div className="w-full max-w-5xl mx-auto px-4 py-8">
       <h1 className="text-3xl font-bold text-white mb-8 tracking-tight">
@@ -312,7 +319,7 @@ function AdminUserListInner({ lang }: Props) {
                       )}
                     </td>
                     <td className="px-4 py-4 text-right">
-                      <div className="flex gap-2 justify-end flex-wrap">
+                      <div className="flex gap-2 justify-end items-center">
                         <button
                           onClick={() => handleToggleSpecs(user.id)}
                           className={`text-xs px-4 py-2 rounded font-bold uppercase tracking-wide transition-colors ${
@@ -323,34 +330,22 @@ function AdminUserListInner({ lang }: Props) {
                         >
                           {expandedUser === user.id ? tAdmin("hideSpecs") : tAdmin("specs")}
                         </button>
-                        <button
-                          onClick={() => handleSetAdmin(user.id, !user.isAdmin)}
-                          className={`text-xs px-4 py-2 rounded font-bold uppercase tracking-wide transition-colors ${
-                            user.isAdmin
-                              ? "bg-red-900/50 hover:bg-red-700/50 text-red-300 hover:text-red-200"
-                              : "bg-concrete-800 hover:bg-concrete-700 text-neutral-200"
-                          }`}
-                        >
-                          {user.isAdmin ? tAdmin("demote") : tAdmin("promote")}
-                        </button>
-                        <button
-                          onClick={() => handleGenerateResetLink(user.id)}
-                          className="text-xs px-4 py-2 bg-concrete-800 hover:bg-concrete-700 text-neutral-200 rounded font-bold uppercase tracking-wide transition-colors"
-                        >
-                          {tAdmin("resetLink")}
-                        </button>
-                        {!isSelf && (
+                        <div data-user-menu={user.id}>
                           <button
-                            onClick={() =>
-                              setDeleteConfirmId(
-                                deleteConfirmId === user.id ? null : user.id
-                              )
-                            }
-                            className="text-xs px-4 py-2 bg-red-900/50 hover:bg-red-700/50 text-red-300 hover:text-red-200 rounded font-bold uppercase tracking-wide transition-colors"
+                            onClick={(e) => toggleMenu(user.id, e.currentTarget)}
+                            aria-haspopup="menu"
+                            aria-expanded={openMenu === user.id}
+                            aria-controls={openMenu === user.id ? "user-actions-menu" : undefined}
+                            aria-label={tCommon("actions")}
+                            className="p-2 rounded text-neutral-400 hover:text-white hover:bg-concrete-700 transition-colors"
                           >
-                            {tAdmin("deleteUser")}
+                            <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+                              <circle cx="8" cy="2.5" r="1.5"/>
+                              <circle cx="8" cy="8" r="1.5"/>
+                              <circle cx="8" cy="13.5" r="1.5"/>
+                            </svg>
                           </button>
-                        )}
+                        </div>
                       </div>
                       {resetLinks[user.id] && (
                         <div className="mt-3 text-left bg-concrete-800/50 rounded p-3">
@@ -364,28 +359,6 @@ function AdminUserListInner({ lang }: Props) {
                             className="w-full text-xs px-3 py-2 bg-concrete-950 border border-concrete-600 rounded text-white font-mono focus:outline-none focus:border-safety-500 focus:ring-1 focus:ring-safety-500"
                             onFocus={(e) => e.target.select()}
                           />
-                        </div>
-                      )}
-                      {deleteConfirmId === user.id && (
-                        <div className="mt-3 text-left bg-red-900/20 border border-red-500/30 rounded p-3">
-                          <p className="text-xs text-red-300 mb-3">
-                            {tAdmin("confirmDeleteOne", { name: user.name })}
-                          </p>
-                          <div className="flex gap-2">
-                            <button
-                              onClick={() => void executeDelete([user.id])}
-                              disabled={deleting}
-                              className="text-xs px-4 py-2 bg-red-700 hover:bg-red-600 text-white rounded font-bold uppercase tracking-wide transition-colors disabled:opacity-50"
-                            >
-                              {tCommon("confirm")}
-                            </button>
-                            <button
-                              onClick={() => setDeleteConfirmId(null)}
-                              className="text-xs px-4 py-2 bg-concrete-800 hover:bg-concrete-700 text-neutral-200 rounded font-bold uppercase tracking-wide transition-colors"
-                            >
-                              {tCommon("cancel")}
-                            </button>
-                          </div>
                         </div>
                       )}
                     </td>
@@ -476,6 +449,111 @@ function AdminUserListInner({ lang }: Props) {
           </tbody>
         </table>
       </div>
+
+      {/* Fixed-position popover — rendered outside overflow-hidden table */}
+      {popoverUser && (
+        <div
+          id="user-actions-menu"
+          role="menu"
+          aria-label={tCommon("actions")}
+          data-user-menu={openMenu}
+          ref={popoverRef}
+          style={{ position: "fixed", top: menuPos.top, right: menuPos.right, zIndex: 50 }}
+          className="w-48 bg-concrete-800 border border-concrete-600 rounded-lg shadow-xl overflow-hidden"
+        >
+          {(() => {
+            const isLastAdmin =
+              popoverUser.isAdmin && users.filter((u) => u.isAdmin).length === 1;
+            const isSelfMenu = popoverUser.id === currentUser?.id;
+            return (
+              <>
+                <button
+                  role="menuitem"
+                  disabled={isLastAdmin}
+                  title={isLastAdmin ? tAdmin("lastAdmin") : undefined}
+                  onClick={() => {
+                    closeMenu();
+                    void handleSetAdmin(popoverUser.id, !popoverUser.isAdmin);
+                  }}
+                  className={`w-full flex items-center px-4 py-2.5 text-sm text-neutral-200 hover:bg-concrete-700 hover:text-white transition-colors font-bold uppercase tracking-wide text-left focus:outline-none focus:bg-concrete-700 focus:text-white${isLastAdmin ? " opacity-50 cursor-not-allowed" : ""}`}
+                >
+                  {popoverUser.isAdmin ? tAdmin("demote") : tAdmin("promote")}
+                </button>
+                <button
+                  role="menuitem"
+                  onClick={() => {
+                    closeMenu();
+                    void handleGenerateResetLink(popoverUser.id);
+                  }}
+                  className="w-full flex items-center px-4 py-2.5 text-sm text-neutral-200 hover:bg-concrete-700 hover:text-white transition-colors font-bold uppercase tracking-wide text-left focus:outline-none focus:bg-concrete-700 focus:text-white"
+                >
+                  {tAdmin("resetLink")}
+                </button>
+                {!isSelfMenu && (
+                  <>
+                    <div className="border-t border-concrete-600" role="separator" />
+                    <button
+                      role="menuitem"
+                      onClick={() => {
+                        closeMenu();
+                        setDeleteConfirmId(popoverUser.id);
+                      }}
+                      className="w-full flex items-center px-4 py-2.5 text-sm text-red-400 hover:bg-concrete-700 hover:text-red-300 transition-colors font-bold uppercase tracking-wide text-left focus:outline-none focus:bg-concrete-700 focus:text-red-300"
+                    >
+                      {tAdmin("deleteUser")}
+                    </button>
+                  </>
+                )}
+              </>
+            );
+          })()}
+        </div>
+      )}
+
+      {/* Delete confirmation modal */}
+      {deleteModalUser && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="delete-user-modal-title"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60"
+          onClick={() => setDeleteConfirmId(null)}
+          onKeyDown={(e) => {
+            if (e.key === "Escape") setDeleteConfirmId(null);
+          }}
+        >
+          <div
+            className="bg-concrete-900 border border-concrete-700 rounded-lg p-6 w-full max-w-sm shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h2
+              id="delete-user-modal-title"
+              className="text-white font-bold text-lg mb-3"
+            >
+              {tAdmin("deleteUser")}
+            </h2>
+            <p className="text-neutral-300 text-sm mb-6">
+              {tAdmin("confirmDeleteOne", { name: deleteModalUser.name })}
+            </p>
+            <div className="flex gap-3 justify-end">
+              <button
+                autoFocus
+                onClick={() => setDeleteConfirmId(null)}
+                className="text-xs px-4 py-2 bg-concrete-800 hover:bg-concrete-700 text-neutral-200 rounded font-bold uppercase tracking-wide transition-colors"
+              >
+                {tCommon("cancel")}
+              </button>
+              <button
+                onClick={() => void executeDelete([deleteModalUser.id])}
+                disabled={deleting}
+                className="text-xs px-4 py-2 bg-red-700 hover:bg-red-600 text-white rounded font-bold uppercase tracking-wide transition-colors disabled:opacity-50"
+              >
+                {tCommon("confirm")}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

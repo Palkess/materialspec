@@ -1,8 +1,9 @@
-import { useState, useEffect, useRef, useMemo } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { I18nextProvider, useTranslation } from "react-i18next";
 import { trpc } from "../lib/trpc";
 import { createI18n } from "../lib/i18n";
 import { useAuthGuard } from "../lib/useAuthGuard";
+import { usePopoverMenu } from "../lib/usePopoverMenu";
 
 interface Spec {
   id: string;
@@ -57,82 +58,8 @@ function SpecListInner({ lang }: Props) {
   const [loading, setLoading] = useState(true);
   const [sortCol, setSortCol] = useState<SortColumn>("createdAt");
   const [sortDir, setSortDir] = useState<SortDir>("desc");
-  const [openMenu, setOpenMenu] = useState<string | null>(null);
-  const [menuPos, setMenuPos] = useState({ top: 0, right: 0 });
-  const triggerRef = useRef<HTMLButtonElement | null>(null);
-  const popoverRef = useRef<HTMLDivElement | null>(null);
-
-  const closeMenu = () => {
-    setOpenMenu(null);
-    triggerRef.current?.focus();
-  };
-
-  // Close on outside click
-  useEffect(() => {
-    const handler = (e: MouseEvent) => {
-      const target = e.target as HTMLElement;
-      if (!target.closest("[data-spec-menu]")) {
-        setOpenMenu(null);
-      }
-    };
-    document.addEventListener("mousedown", handler);
-    return () => document.removeEventListener("mousedown", handler);
-  }, []);
-
-  // Focus first menu item when popover opens; Escape / keyboard nav
-  useEffect(() => {
-    if (!openMenu || !popoverRef.current) return;
-    const items = Array.from(
-      popoverRef.current.querySelectorAll<HTMLElement>("a[role='menuitem'], button[role='menuitem']")
-    );
-    items[0]?.focus();
-
-    const handleKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") {
-        e.preventDefault();
-        closeMenu();
-        return;
-      }
-      if (e.key === "ArrowDown") {
-        e.preventDefault();
-        const idx = items.indexOf(document.activeElement as HTMLElement);
-        items[(idx + 1) % items.length]?.focus();
-        return;
-      }
-      if (e.key === "ArrowUp") {
-        e.preventDefault();
-        const idx = items.indexOf(document.activeElement as HTMLElement);
-        items[(idx - 1 + items.length) % items.length]?.focus();
-        return;
-      }
-      if (e.key === "Tab") {
-        // Keep focus inside the menu: wrap instead of leaving
-        e.preventDefault();
-        const idx = items.indexOf(document.activeElement as HTMLElement);
-        if (e.shiftKey) {
-          items[(idx - 1 + items.length) % items.length]?.focus();
-        } else {
-          items[(idx + 1) % items.length]?.focus();
-        }
-      }
-    };
-    document.addEventListener("keydown", handleKey);
-    return () => document.removeEventListener("keydown", handleKey);
-  }, [openMenu]);
-
-  const toggleMenu = (id: string, btn: HTMLButtonElement) => {
-    if (openMenu === id) {
-      closeMenu();
-      return;
-    }
-    triggerRef.current = btn;
-    const rect = btn.getBoundingClientRect();
-    setMenuPos({
-      top: rect.bottom + window.scrollY + 4,
-      right: window.innerWidth - rect.right,
-    });
-    setOpenMenu(id);
-  };
+  const { openMenu, menuPos, triggerRef, popoverRef, toggleMenu, closeMenu } =
+    usePopoverMenu("data-spec-menu");
   const apiUrl = getApiUrl();
 
   const loadSpecs = async () => {
@@ -363,7 +290,7 @@ function SpecListInner({ lang }: Props) {
             role="menuitem"
             href={`${apiUrl}/specs/${openMenu}/export.xlsx?lang=${lang}`}
             className="flex items-center px-4 py-2.5 text-sm text-neutral-200 hover:bg-concrete-700 hover:text-white transition-colors font-bold uppercase tracking-wide focus:outline-none focus:bg-concrete-700 focus:text-white"
-            onClick={() => setOpenMenu(null)}
+            onClick={() => closeMenu()}
           >
             {t("list.exportXlsx")}
           </a>
@@ -371,7 +298,7 @@ function SpecListInner({ lang }: Props) {
             role="menuitem"
             href={`${apiUrl}/specs/${openMenu}/export.pdf?lang=${lang}`}
             className="flex items-center px-4 py-2.5 text-sm text-neutral-200 hover:bg-concrete-700 hover:text-white transition-colors font-bold uppercase tracking-wide focus:outline-none focus:bg-concrete-700 focus:text-white"
-            onClick={() => setOpenMenu(null)}
+            onClick={() => closeMenu()}
           >
             {t("list.exportPdf")}
           </a>
