@@ -212,11 +212,9 @@ function SpecEditorInner({ lang, specId, userName }: Props) {
       // Filter empty trailing rows and normalize numeric strings from Postgres.
       // Postgres numeric(x,y) returns trailing zeros (e.g. "0.2500", "5.000")
       // which fail the API's VAT_RATES.map(String) check and regex patterns.
-      // fields.length is the authoritative count of visible rows. data.items may
-      // be longer because react-hook-form's shouldUnregister:false preserves
-      // unregistered field values on unmount, re-extending the array after
-      // useFieldArray.remove() shrinks it. Slicing to fields.length drops those
-      // phantom entries before filtering and sending to the API.
+      // slice(0, fields.length) is a defensive guard: all item fields use setValue
+      // (not register), so _formValues.items stays in sync with fields.length and
+      // no phantom entries exist. The slice ensures correctness if that ever changes.
       const filteredItems = data.items
         .slice(0, fields.length)
         .filter((item) => item.name.trim() !== "")
@@ -245,12 +243,9 @@ function SpecEditorInner({ lang, specId, userName }: Props) {
         setSavedId(result.id);
         window.history.replaceState(null, "", `/${lang}/specs/${result.id}/edit`);
       }
-      // Remove empty rows synchronously before reset() iterates registered inputs.
-      // Without flushSync, the empty row's ItemRow is still mounted when reset()
-      // runs, so RHF calls set(_formValues, 'items.N.name', undefined) for those
-      // inputs — extending the array with a phantom {} that keeps isDirty true.
-      // flushSync forces the removal render (and, with shouldUnregister:true, the
-      // unregistration) to complete before reset() sees any registered fields.
+      // Remove empty rows synchronously before reset() so that fields reflects
+      // the post-removal count when reset() runs. Without flushSync, useFieldArray
+      // would still report the old length during reset(), leaving isDirty true.
       const emptyIndices = data.items
         .slice(0, fields.length)
         .reduce<number[]>((acc, item, i) => {
@@ -374,7 +369,6 @@ function SpecEditorInner({ lang, specId, userName }: Props) {
                     id={field.id}
                     index={index}
                     isLast={index === fields.length - 1}
-                    register={register}
                     control={control}
                     onRemove={() => remove(index)}
                     onAppendRow={handleAppendRow}

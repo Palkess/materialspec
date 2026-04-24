@@ -102,6 +102,8 @@ app.get("/specs/:id/export.pdf", handler)
 
 **In E2E tests, direct tRPC POST requests must send the input as raw JSON — not wrapped in `{"json": input}`.** tRPC v11 `httpBatchLink` without a transformer sends mutations with the raw object as the body (e.g. `{"email":"...","name":"...","password":"..."}`). The `{"json": ...}` wrapper is a tRPC v10 artefact; using it in v11 causes Zod input parsing to fail with `BAD_REQUEST` before the handler is reached. Use `page.evaluate(() => fetch(..., { body: JSON.stringify(rawInput) }))` from within the browser context rather than Playwright's `request` API to ensure CORS and serialization match what the tRPC client sends.
 
+**Do not use `register()` for inputs inside `ItemRow` — all item fields must use `setValue + useWatch`.** react-hook-form's default `shouldUnregister: false` causes registered inputs to restore their values into `_formValues` when they unmount. When `useFieldArray.remove()` clears an item, registered `name` and `description` inputs unmount and recreate a phantom `_formValues.items[N]` with `unit/quantity/pricePerUnit/taxRate` all `undefined`. The next `append()` sees the phantom, pushes the real item to a higher index, `useFieldArray` re-syncs to one extra row, and Zod silently rejects the form because the phantom's `unit: undefined` fails `z.enum(UNITS)`. Using `setValue + useWatch` (as all other item fields already do) means no registered inputs exist in `ItemRow` — nothing restores the phantom on unmount.
+
 ---
 
 ## How to contribute to this file

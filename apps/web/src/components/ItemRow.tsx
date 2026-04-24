@@ -2,7 +2,7 @@ import { useMemo } from "react";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { useTranslation } from "react-i18next";
-import type { UseFormRegister, Control } from "react-hook-form";
+import type { Control } from "react-hook-form";
 import { useWatch } from "react-hook-form";
 import NumberInput from "./NumberInput";
 import VatSelect from "./VatSelect";
@@ -14,7 +14,6 @@ interface Props {
   index: number;
   isLast: boolean;
   id: string;
-  register: UseFormRegister<SpecFormValues>;
   control: Control<SpecFormValues>;
   onRemove: () => void;
   onAppendRow: () => void;
@@ -29,7 +28,6 @@ export default function ItemRow({
   index,
   isLast,
   id,
-  register,
   control,
   onRemove,
   onAppendRow,
@@ -55,6 +53,8 @@ export default function ItemRow({
     opacity: isDragging ? 0.5 : 1,
   };
 
+  const name = useWatch({ control, name: `items.${index}.name` }) ?? "";
+  const description = useWatch({ control, name: `items.${index}.description` }) ?? "";
   const quantity = useWatch({ control, name: `items.${index}.quantity` }) || "0";
   const pricePerUnit = useWatch({ control, name: `items.${index}.pricePerUnit` }) || "0";
   const taxRate = useWatch({ control, name: `items.${index}.taxRate` }) || "0.25";
@@ -97,11 +97,9 @@ export default function ItemRow({
       <td className="px-1 py-2.5">
         <input
           type="text"
-          {...register(`items.${index}.name`)}
-          ref={(el) => {
-            register(`items.${index}.name`).ref(el);
-            nameInputRef(el);
-          }}
+          value={name}
+          onChange={(e) => setValue(`items.${index}.name`, e.target.value)}
+          ref={nameInputRef}
           placeholder={t("editor.item.name")}
           className="w-full px-2 py-2 bg-concrete-800 border border-concrete-600 rounded text-white text-sm placeholder-neutral-500 focus:outline-none focus:border-safety-500 focus:ring-1 focus:ring-safety-500 transition-colors"
         />
@@ -109,7 +107,8 @@ export default function ItemRow({
       <td className="px-1 py-2.5 hidden lg:table-cell">
         <input
           type="text"
-          {...register(`items.${index}.description`)}
+          value={description}
+          onChange={(e) => setValue(`items.${index}.description`, e.target.value)}
           placeholder={t("editor.item.description")}
           className="w-full px-2 py-2 bg-concrete-800 border border-concrete-600 rounded text-white text-sm placeholder-neutral-500 focus:outline-none focus:border-safety-500 focus:ring-1 focus:ring-safety-500 transition-colors"
         />
