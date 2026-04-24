@@ -100,7 +100,7 @@ app.all("/trpc/*", async (c) => {
   return response;
 });
 
-const port = Number(process.env.API_PORT) || 3001;
+const port = Number(process.env.API_PORT) || 3721;
 const host = process.env.API_HOST || "0.0.0.0";
 
 async function main() {

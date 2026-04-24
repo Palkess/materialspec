@@ -53,11 +53,11 @@ ADMIN_EMAIL=admin@yourcompany.com
 ADMIN_INITIAL_PASSWORD=<your initial admin password>
 ```
 
-The API port defaults to `3001` — `API_HOST_PORT` and `PUBLIC_API_URL` must match:
+The API port defaults to `3721` — `API_HOST_PORT` and `PUBLIC_API_URL` must match:
 
 ```env
-API_HOST_PORT=3001
-PUBLIC_API_URL=http://localhost:3001
+API_HOST_PORT=3721
+PUBLIC_API_URL=http://localhost:3721
 ```
 
 ### 2. Start the stack
@@ -69,7 +69,7 @@ docker compose -f docker-compose.yml -f docker-compose.dev.yml --profile dev up 
 | Service | URL |
 |---------|-----|
 | Web app | http://localhost:4321 |
-| API | http://localhost:3001 |
+| API | http://localhost:3721 |
 | Adminer (DB) | http://localhost:8080 |
 
 Migrations run automatically on startup. The admin user is created from the env vars — log in at http://localhost:4321/sv/login.

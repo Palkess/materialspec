@@ -26,7 +26,7 @@ All services run in Docker Compose. The stack boots with one command; see `workf
 |---------------|-------|------------------------------------|
 | postgres      | 5432  | Primary database (Postgres 16)     |
 | postgres-test | 5433  | Isolated test database             |
-| api           | 3001  | Hono + tRPC + export routes        |
+| api           | 3721  | Hono + tRPC + export routes        |
 | web           | 4321  | Astro SSR (Node adapter)           |
 | adminer       | 8080  | DB GUI (dev profile only)          |
 

@@ -13,8 +13,8 @@ Consult when running, building, testing, or deploying the project.
 - Node.js 20+ (for running host-side tools like Playwright)
 - Copy `.env.example` to `.env` and set `API_HOST_PORT` and `PUBLIC_API_URL` consistently:
   ```
-  API_HOST_PORT=3001
-  PUBLIC_API_URL=http://localhost:3001
+  API_HOST_PORT=3721
+  PUBLIC_API_URL=http://localhost:3721
   ```
 
 ### Start the full dev stack
@@ -25,7 +25,7 @@ docker compose -f docker-compose.yml -f docker-compose.dev.yml --profile dev up 
 
 Services available after startup:
 - Web app: http://localhost:4321
-- API: http://localhost:3001
+- API: http://localhost:3721
 - Adminer (DB GUI): http://localhost:8080
 
 Migrations run automatically on API boot (`RUN_MIGRATIONS_ON_BOOT=true`). The seeded admin user is created from `ADMIN_EMAIL` + `ADMIN_INITIAL_PASSWORD` in `.env`.
@@ -100,7 +100,7 @@ cd apps/web && npx playwright test --ui
 
 Set these env vars for admin tests:
 ```
-E2E_API_URL=http://localhost:3001
+E2E_API_URL=http://localhost:3721
 E2E_ADMIN_EMAIL=admin@example.com
 E2E_ADMIN_PASSWORD=<your ADMIN_INITIAL_PASSWORD from .env>
 ```

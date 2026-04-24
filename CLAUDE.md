@@ -9,10 +9,10 @@ Materialspec is a bilingual (Swedish/English) web application for construction c
 ```bash
 cp .env.example .env
 # Edit .env: SESSION_SECRET, ADMIN_EMAIL, ADMIN_INITIAL_PASSWORD
-# Ensure API_HOST_PORT and PUBLIC_API_URL both point to the same port (default 3001)
+# Ensure API_HOST_PORT and PUBLIC_API_URL both point to the same port (default 3721)
 
 docker compose -f docker-compose.yml -f docker-compose.dev.yml --profile dev up --build
-# Web: http://localhost:4321 | API: http://localhost:3001 | Adminer: http://localhost:8080
+# Web: http://localhost:4321 | API: http://localhost:3721 | Adminer: http://localhost:8080
 ```
 
 ---

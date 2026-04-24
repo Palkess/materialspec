@@ -10,12 +10,12 @@ Materialspec is a bilingual (Swedish/English) web application for construction c
 # Copy and configure environment
 cp .env.example .env
 # Edit .env: set SESSION_SECRET, ADMIN_EMAIL, ADMIN_INITIAL_PASSWORD
-# Ensure API_HOST_PORT and PUBLIC_API_URL match (default: both 3001)
+# Ensure API_HOST_PORT and PUBLIC_API_URL match (default: both 3721)
 
 # Start the full dev stack (hot-reload, Adminer included)
 docker compose -f docker-compose.yml -f docker-compose.dev.yml --profile dev up --build
 
-# App: http://localhost:4321 | API: http://localhost:3001 | Adminer: http://localhost:8080
+# App: http://localhost:4321 | API: http://localhost:3721 | Adminer: http://localhost:8080
 ```
 
 Migrations and admin seed run automatically on API boot.
