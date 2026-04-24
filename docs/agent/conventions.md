@@ -82,6 +82,7 @@ app.get("/specs/:id/export.pdf", handler)
 - `useAuthGuard(lang)` (`src/lib/useAuthGuard.ts`) is the standard hook for protected components. It redirects to `/login` on auth failure and exposes `{ user, checking }`.
 - Popover menus must use `position: fixed` with coordinates from `getBoundingClientRect()` — the spec list table has `overflow-hidden` which clips absolute-positioned children.
 - WCAG menu pattern: `role="menu"` on the popover, `role="menuitem"` on each item, `aria-haspopup="menu"` + `aria-expanded` on the trigger. Focus moves to first item on open; Escape returns focus to trigger.
+- Popover keyboard navigation (arrow keys, tab wrap, Escape-to-trigger) is handled by the shared `usePopoverMenu(menuAttr)` hook (`src/lib/usePopoverMenu.ts`). Pass a data attribute name (e.g. `"data-spec-menu"`) — add that attribute to both the trigger wrapper and the fixed-position popover div so outside-click detection works correctly.
 
 ---
 
@@ -94,6 +95,10 @@ app.get("/specs/:id/export.pdf", handler)
 **We used `export.:ext` as a Hono route pattern — `c.req.param("ext")` returned the full suffix unparsed in some cases, causing "Invalid format" errors. Do not reintroduce.** Use explicit `.xlsx` and `.pdf` routes.
 
 **We used `@astrojs/node` v10 with Astro v5 — v10 imports `sessionDrivers` from `astro/config` which doesn't exist in Astro v5, causing a boot crash. Do not upgrade `@astrojs/node` past v9.x until Astro is also upgraded to v6.**
+
+**Do not use `.default()` in a Zod schema that is also passed to `zodResolver`.** Zod's `.default()` creates a divergence between the input type (field optional) and the output type (field required). `zodResolver` returns `Resolver<InputType, any, OutputType>`, but `useForm<T>` expects `Resolver<T, any, T>` — the mismatch produces a cascade of `useForm`, `handleSubmit`, `control`, and `register` type errors. Instead, put all defaults in `useForm({ defaultValues })` and `emptyItem()`-style factories; keep the schema fields required with no `.default()`.
+
+**Do not use `Parameters<typeof app.get>` (or any method) to extract a Hono handler's context type.** `app.get` is overloaded and `Parameters<>` resolves to one specific overload — often the wrong one — yielding `never` or a broken type. Import `Context` directly from `"hono"` and annotate the parameter as `Context`.
 
 **In E2E tests, direct tRPC POST requests must send the input as raw JSON — not wrapped in `{"json": input}`.** tRPC v11 `httpBatchLink` without a transformer sends mutations with the raw object as the body (e.g. `{"email":"...","name":"...","password":"..."}`). The `{"json": ...}` wrapper is a tRPC v10 artefact; using it in v11 causes Zod input parsing to fail with `BAD_REQUEST` before the handler is reached. Use `page.evaluate(() => fetch(..., { body: JSON.stringify(rawInput) }))` from within the browser context rather than Playwright's `request` API to ensure CORS and serialization match what the tRPC client sends.
 

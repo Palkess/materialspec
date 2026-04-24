@@ -111,6 +111,10 @@ src/pages/
 
 **tRPC client** (`src/lib/trpc.ts`): `httpBatchLink` pointing to `window.__API_URL__` (injected by AppLayout via `PUBLIC_API_URL` env var) with `credentials: "include"` for session cookies.
 
+**Shared web utilities** (`src/lib/`):
+- `useAuthGuard(lang)` — session check + redirect for protected components
+- `usePopoverMenu(menuAttr)` — keyboard navigation, outside-click, and position tracking for fixed-position popover menus; used by `SpecList` and `AdminUserList`
+
 ---
 
 ## Shared package (`packages/shared`)
